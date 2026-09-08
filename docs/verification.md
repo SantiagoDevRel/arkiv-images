@@ -37,7 +37,7 @@ An independent Node reader verified the same original bytes, digests and transac
 
 `npm run test:browser`: isolated browser context, injected wallet and controlled RPC, real SDK/package and pixel decoder. PNG inline, JPEG and chunked PNG upload/retrieve/download pass; download bytes match. Reload-and-read works without the original file or connected wallet. Empty, loading, missing-entity, RPC failure, rejected-signature, wrong-chain and invalid-file states were exercised.
 
-Rendered widths: 390, 599, 600, 601, 768 and 1440 CSS pixels. DOM checks found no horizontal page overflow; computed typography and font loading matched the documented contract. Screenshots at 390/768/1440 also show the real-network JPEG result. Reflow was inspected at 200% CSS zoom; native browser-menu zoom and a physical touch device have not been separately verified. Screenshots are local test artifacts, not a deployed demo.
+Rendered widths: 390, 599, 600, 601, 768 and 1440 CSS pixels. DOM checks found no horizontal page overflow; computed typography and font loading matched the documented contract. Screenshots at 390/768/1440 also show the real-network JPEG result. Reflow passed both CSS zoom and **native Chrome page zoom at 200%**, set through browser settings in an isolated temporary profile. CDP confirmed browser zoom 2, CSS zoom 1, no page overflow and a decoded image; screenshots use device layout coordinates to avoid a Chrome/Playwright clipping mismatch at native zoom. Keyboard navigation reaches wallet controls and opens/closes the settings disclosure with Enter. A physical touch device has not been tested. Screenshots are local artifacts, not a deployed demo.
 
 ## Consumer and audit gates
 
@@ -55,7 +55,13 @@ Version **0.1.1** is published at 2026-09-08T22:18:33.078Z. The registry tarball
 
 A fresh agent installed **0.1.1 from npm** in another new directory, verified registry URL/integrity and shipped guides, ran the exact README examples, compiled all public types with strict TypeScript (without skipLibCheck), and independently verified SHA-256 for both real inline and chunked PNGs. No documentation blockers, wallet actions or network writes. The sample now pins 0.1.1 with a registry lockfile; its build and all browser regression cases passed again. The browser test explicitly checks the displayed installed version. A fresh real-network JPEG read in the final sample rendered successfully at 390/768/1440, with no page overflow.
 
-Claude independently corroborated the staging links, npm publication and unchanged storage code in 0.1.1. No code blockers remained; the source report heading is corrected here. Final default-branch checkout verification is the remaining source release gate.
+Claude independently corroborated the staging links, npm publication and unchanged storage code in 0.1.1. No code blockers remained; the source report heading is corrected here.
+
+## Final English interface
+
+The [Claude Design export](design.md) is integrated with the real sample. All controls, statuses, errors and guides are English. After a separate Claude copy review, the page uses one storage-settings disclosure, keeps SHA-256 under verification details and removes repeated idle/next-step prose. Essential limits, public metadata consent and the measured transaction count remain visible before signing. The empty page contains 106 visible words in the inspected Rabby browser; wording count can vary with wallet discovery/state. No essential instruction depends on a hover-only tooltip.
+
+The final copy passed the sample build, all three controlled browser roundtrips, six widths, keyboard disclosures and native 200% zoom. A fresh real-network JPEG read in this English interface displayed package v0.1.1 and decoded at 390/768/1440 with no page overflow. Grok was also requested for the copy review, but its service returned an out-of-usage error; no Grok review is claimed.
 
 ## Preview and scope
 
