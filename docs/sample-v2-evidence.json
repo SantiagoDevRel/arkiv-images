@@ -1,0 +1,27 @@
+{
+  "imageKey": "0x5d8244638c0bb2177a9e48a5a0d19d57716e762d14ea959dd4d56d82efca39bc",
+  "transactionHashes": [
+    "0xcd7fcc4cfa9f3952c156c300bb232b48697d04930f777890d0aa2c1ca1e267d2"
+  ],
+  "wallet": "0xa618a2736431f24c26f1c8dac9ca00ecc845a1c6",
+  "requestedLocalExpiration": "2026-09-09T18:42",
+  "expirationText": "Available until approximately Sep 9, 2026, 6:43 PM",
+  "readStatus": "Matches your original byte for byte.",
+  "inspection": "How this image was retrieved\n\n1 entity · 2,977 image bytes\n\nImage entity\nContains image bytes\nVerified image\nSHA-256 matches\nImage entity\n0x5d8244638c0bb2177a9e48a5a0d19d57716e762d14ea959dd4d56d82efca39bc\n\nThe payload is the complete original image.\n\nPayload · 2,977 bytes\nff d8 ff e0 00 10 4a 46 49 46 00 01 01 00 00 01 00 01 00 00 ff e2 01 d8 49 43 43 5f 50 52 4f 46 …\nAttributes · indexed for queries\nName\tType\tValue\nfilename\tstr\tpublic.jpg\nheight\tu64\t200\nmime\tstr\timage/jpeg\nmode\tstr\tinline\nsha256\tbytes32\t0x6505b34edf4866c89d73791c5b775ee8588ba62ba54249051891d7833d3b1684\nsize\tu64\t2977\ntype\tstr\tarkiv-images/v1\nwidth\tu64\t320\nSee the inspection query\n\nThe payload bytes match the verified image. No chunk assembly is needed.",
+  "verifiedAt": "2026-09-08T23:51:29.937Z",
+  "packageVersion": "0.1.1",
+  "sdkVersion": "0.8.0",
+  "chainId": 7738577,
+  "network": "Tiramisu",
+  "byteLength": 2977,
+  "sha256": "0x6505b34edf4866c89d73791c5b775ee8588ba62ba54249051891d7833d3b1684",
+  "byteExact": true,
+  "receipt": {
+    "status": "success",
+    "blockNumber": "201388",
+    "from": "0xa618a2736431f24c26f1c8dac9ca00ecc845a1c6",
+    "to": "0x4400000000000000000000000000000000000044",
+    "value": "0",
+    "gasUsed": "167792"
+  }
+}

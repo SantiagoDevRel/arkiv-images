@@ -11,7 +11,8 @@ await mkdir(output,{recursive:true});
 const browser = await chromium.launch({channel:'chrome',headless:true});
 const context = await browser.newContext({colorScheme:'dark',viewport:{width:1440,height:1000},acceptDownloads:true});
 const page = await context.newPage(), rpc=rpcHarness();
-let reject=false, failRead=false, wrongChain=false, delay=0;
+let reject=false, failRead=false, wrongChain=false, delay=0, activeChain='0x1';
+const walletCalls=[];
 const routeRpc=async route=>{
   const req=route.request().postDataJSON();
   if(delay) await new Promise(r=>setTimeout(r,delay));
@@ -23,7 +24,9 @@ const routeRpc=async route=>{
 };
 await context.route('https://rpc.tiramisu.db-chain.testnet.arkiv.network/**',routeRpc);
 await page.exposeFunction('walletRequest',async args=>{
-  if(args.method==='eth_chainId'&&wrongChain)return '0x1';
+  walletCalls.push(args.method);
+  if(args.method==='eth_chainId')return wrongChain?'0x1':activeChain;
+  if(args.method==='wallet_switchEthereumChain'){assert.equal(args.params[0].chainId,'0x7614d1');activeChain=args.params[0].chainId;return null;}
   if(args.method==='eth_sendTransaction'&&reject)throw Error('rejected');
   return rpc.request(args);
 });
@@ -37,23 +40,23 @@ assert.equal(await page.locator('html').getAttribute('lang'),'en');
 await page.waitForFunction(()=>document.querySelector('#wallet')?.options[0]?.text.includes('MetaMask'));
 await page.screenshot({path:join(output,'empty-1440.png'),fullPage:true});
 assert.equal(await page.locator('#download-result').isVisible(),false);
+assert.equal(await page.locator('#rpc, #consent, #switch').count(),0);
+assert.equal(await page.locator('#expiration').getAttribute('type'),'datetime-local');
+assert.ok((await page.locator('#connect').boundingBox()).y < (await page.locator('h1').boundingBox()).y);
+await page.locator('#connect').focus();await page.keyboard.press('Tab');
+assert.equal(await page.evaluate(()=>document.activeElement.id),'store-tab');
+await page.keyboard.press('ArrowRight');
+assert.equal(await page.locator('#read-form').isVisible(),true);
 assert.match(await page.locator('#key-help').innerText(),/No wallet needed/);
-await page.locator('#file').focus();
-await page.keyboard.press('Tab');
-assert.equal(await page.evaluate(()=>document.activeElement.id),'wallet');
-await page.keyboard.press('Tab');
-assert.equal(await page.evaluate(()=>document.activeElement.id),'connect');
-const settingsDisclosure=page.locator('summary').filter({hasText:'Storage settings'});
-await settingsDisclosure.focus();await page.keyboard.press('Enter');
-assert.equal(await page.locator('#rpc').isVisible(),true);
-await page.keyboard.press('Enter');
-assert.equal(await page.locator('#rpc').isVisible(),false);
+await page.keyboard.press('ArrowLeft');
+assert.equal(await page.locator('#upload-form').isVisible(),true);
 await page.locator('#file').setInputFiles({name:'bad.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg/>')});
 await page.waitForFunction(()=>document.querySelector('#file-info').dataset.state==='error');
 await page.locator('#file').setInputFiles({name:'large.png',mimeType:'image/png',buffer:Buffer.alloc(25*1024*1024+1)});
 await page.waitForFunction(()=>document.querySelector('#file-info').textContent.includes('exceeds 25'));
 await page.locator('#connect').click();
-await page.waitForFunction(()=>document.querySelector('#wallet-status').textContent.includes('Connected to Tiramisu'));
+await page.waitForFunction(()=>document.querySelector('#connect').title.startsWith('0x'));
+assert.ok(walletCalls.includes('wallet_switchEthereumChain'));
 const results=[];
 for(const fixture of [
   {bytes:png(undefined,320,200),filename:'inline.png',mimeType:'image/png'},
@@ -63,21 +66,40 @@ for(const fixture of [
   const {bytes,filename,mimeType}=fixture;
   await page.locator('#file').setInputFiles({name:filename,mimeType,buffer:Buffer.from(bytes)});
   await page.waitForFunction(()=>document.querySelector('#file-info').dataset.state==='success');
-  await page.locator('#consent').check();
+  delay=50;
   await page.locator('#upload').click();
-  await page.waitForFunction(()=>document.querySelector('#upload-status').dataset.state==='success');
-  delay=100;
-  await page.locator('#retrieve').click();
-  await page.waitForFunction(()=>document.querySelector('#read-status').dataset.state==='loading');
+  await page.waitForFunction(()=>document.querySelector('#upload-status').dataset.state==='loading');
   await page.screenshot({path:join(output,`loading-${filename}.png`),fullPage:true});
-  await page.waitForFunction(()=>document.querySelector('#read-status').dataset.state==='success');delay=0;
+  await page.waitForFunction(()=>document.querySelector('#upload-status').textContent==='Stored.' && document.querySelector('#read-status').dataset.state==='loading');
+  assert.equal(await page.locator('#result-empty').isVisible(),false);
+  assert.equal(await page.locator('#upload-result').isVisible(),true);
+  await page.screenshot({path:join(output,`retrieving-${filename}.png`),fullPage:true});
+  await page.waitForFunction(()=>document.querySelector('#read-status').dataset.state==='success');
+  await page.waitForFunction(()=>!document.querySelector('#inspection').hidden);delay=0;
+  assert.equal(await page.locator('#upload-status').innerText(),'Stored.');
+  assert.equal(await page.locator('.attribute-table tbody tr').count(),filename==='chunked.png'?9:8);
+  if(filename==='chunked.png'){
+    assert.match(await page.locator('.payload-preview').innerText(),/Empty payload/);
+    await page.getByRole('button',{name:'Manifest Describes the file'}).click();
+    assert.equal(await page.locator('.attribute-table tbody tr').count(),6);
+    assert.match(await page.locator('.manifest-json').innerText(),/chunked.png/);
+    await page.getByRole('button',{name:'Chunks 2 ordered payloads'}).click();
+    assert.equal(await page.locator('#chunk-select option').count(),2);
+    await page.locator('#chunk-select').selectOption('1');
+    assert.match(await page.locator('.byte-range').innerText(),/100,000.*120,000/);
+    assert.equal(await page.locator('.attribute-table tbody tr').count(),3);
+    const disclosure=page.getByText('See the inspection query',{exact:true});
+    await disclosure.focus();await page.keyboard.press('Enter');
+    assert.match(await page.locator('.entity-detail details pre').innerText(),/ownedBy/);
+    await page.keyboard.press('Enter');
+  }
   assert.match(await page.locator('#read-status').innerText(),/byte for byte/);
   assert.equal(await page.locator('#recovered').evaluate(img=>img.complete&&img.naturalWidth===320),true);
   const downloadPromise=page.waitForEvent('download');await page.locator('#save').click();const download=await downloadPromise;
   assert.deepEqual(new Uint8Array(await readFile(await download.path())),bytes);
   results.push({filename,bytes:bytes.length,imageKey:await page.locator('#image-key').inputValue()});
 }
-for(const width of [390,599,600,601,768,1440]){
+for(const width of [390,599,600,601,768,899,900,901,1440]){
   await page.setViewportSize({width,height:1000});await page.evaluate(()=>document.fonts.ready);
   const metrics=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,fonts:[...document.querySelectorAll('h1,h2,label,button,.help')].slice(0,10).map(e=>({tag:e.tagName,size:getComputedStyle(e).fontSize,family:getComputedStyle(e).fontFamily,lineHeight:getComputedStyle(e).lineHeight})),loaded:document.fonts.check('500 32px "Space Grotesk"')&&document.fonts.check('400 16px "IBM Plex Mono"')}));
   assert.equal(metrics.overflow,false);assert.equal(metrics.loaded,true);
@@ -88,17 +110,25 @@ await page.evaluate(()=>document.body.style.zoom='200%');
 assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
 await page.screenshot({path:join(output,'zoom-200.png'),fullPage:true});
 await page.evaluate(()=>document.body.style.zoom='');
+await page.locator('#retrieve-tab').click();
 failRead=true;await page.locator('#retrieve').click();await page.waitForFunction(()=>document.querySelector('#read-status').dataset.state==='error');
 assert.equal(await page.locator('#download-result').isVisible(),false);
 await page.screenshot({path:join(output,'read-error.png'),fullPage:true});failRead=false;
 await page.locator('#image-key').fill(`0x${'00'.repeat(32)}`);await page.locator('#retrieve').click();await page.waitForFunction(()=>document.querySelector('#read-status').textContent.includes('Image not found'));
+await page.locator('#store-tab').click();
+const validDate=await page.locator('#expiration').inputValue();
+await page.locator('#expiration').fill('2020-01-01T12:00');
+const beforeDateFailure=rpc.transactions.length;
+await page.locator('#upload').click();await page.waitForFunction(()=>document.querySelector('#upload-status').textContent.includes('future'));
+assert.equal(rpc.transactions.length,beforeDateFailure);await page.locator('#expiration').fill(validDate);
 reject=true;await page.locator('#upload').click();await page.waitForFunction(()=>document.querySelector('#upload-status').dataset.state==='error');
 assert.equal(await page.locator('#upload-result').isVisible(),false);reject=false;
-wrongChain=true;await page.locator('#upload').click();await page.waitForFunction(()=>document.querySelector('#upload-status').textContent.includes('Tiramisu'));wrongChain=false;
-await page.reload();await page.locator('#image-key').fill(results[0].imageKey);await page.locator('#retrieve').click();await page.waitForFunction(()=>document.querySelector('#read-status').dataset.state==='success');
-assert.equal(await page.locator('#read-status').innerText(),'Retrieved and verified.');
-await page.getByText('Verification details',{exact:true}).click();
-assert.match(await page.locator('#download-result').innerText(),/not the author’s identity/);
+wrongChain=true;await page.locator('#upload').click();await page.waitForFunction(()=>document.querySelector('#upload-status').textContent.includes('Reconnect'));wrongChain=false;
+await page.reload();await page.locator('#retrieve-tab').click();await page.locator('#image-key').fill(results[0].imageKey);await page.locator('#retrieve').click();await page.waitForFunction(()=>document.querySelector('#read-status').dataset.state==='success');
+assert.equal(await page.locator('#read-status').innerText(),'Image bytes verified.');
+await page.waitForFunction(()=>!document.querySelector('#inspection').hidden);
+await page.getByText('Integrity check',{exact:true}).click();
+assert.match(await page.locator('#download-result').innerText(),/not the author/);
 await browser.close();
 
 // Real browser page zoom, configured in an isolated Chrome profile, not CSS zoom.
@@ -112,9 +142,11 @@ try {
   await nativeContext.route('https://rpc.tiramisu.db-chain.testnet.arkiv.network/**',routeRpc);
   const nativePage=await nativeContext.newPage();
   await nativePage.goto(process.env.SAMPLE_URL??'http://127.0.0.1:3082');
+  await nativePage.locator('#retrieve-tab').click();
   await nativePage.locator('#image-key').fill(results[0].imageKey);
   await nativePage.locator('#retrieve').click();
   await nativePage.waitForFunction(()=>document.querySelector('#read-status').dataset.state==='success');
+  await nativePage.waitForFunction(()=>!document.querySelector('#inspection').hidden);
   const nativeZoom=await nativePage.evaluate(()=>({innerWidth,outerWidth,dpr:devicePixelRatio,cssZoom:getComputedStyle(document.body).zoom,overflow:document.documentElement.scrollWidth>innerWidth,imageDecoded:document.querySelector('#recovered').naturalWidth===320}));
   assert.equal(nativeZoom.cssZoom,'1');assert.equal(nativeZoom.overflow,false);assert.equal(nativeZoom.imageDecoded,true);
   assert.ok(nativeZoom.dpr>=2);assert.ok(nativeZoom.outerWidth/nativeZoom.innerWidth>=1.9);
@@ -134,4 +166,4 @@ try {
   results.push({nativeZoom});
 } finally { await nativeContext.close(); }
 await writeFile(join(output,'results.json'),JSON.stringify({packageVersion,results,transactions:rpc.transactions,account:TEST_ACCOUNT,kind:'mocked RPC and wallet with real SDK and browser decoder'},null,2));
-console.log(JSON.stringify({ok:true,output,roundtrips:3,viewports:6,nativeZoom:'200%',transactions:rpc.transactions.length}));
+console.log(JSON.stringify({ok:true,output,roundtrips:3,viewports:9,nativeZoom:'200%',transactions:rpc.transactions.length}));

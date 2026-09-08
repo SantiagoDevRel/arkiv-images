@@ -3,88 +3,127 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="color-scheme" content="dark" />
   <title>Images on Arkiv</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
 </head>
 <body>
-<main>
-  <header>
-    <div class="brand-row">
-      <img class="wordmark" src="/assets/arkiv-wordmark-white.svg" alt="Arkiv" />
-      <p class="eyebrow">[ SAMPLE &middot; ARKIV-IMAGES <span id="version"></span> ]</p>
+  <!-- Top bar. Replace the .wordmark span with the unmodified official [ ARKIV ] white SVG. -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img class="wordmark" src="/assets/arkiv-wordmark-white.svg" alt="Arkiv" />
+        <span class="brand-rule" aria-hidden="true"></span>
+        <span class="product">Images</span>
+        <span id="version" class="version"></span>
+      </div>
+      <div class="wallet-bar">
+        <span class="net">Tiramisu testnet</span>
+        <label for="wallet" class="sr-only">Wallet</label>
+        <select id="wallet"><option value="">Looking for wallets…</option></select>
+        <button id="connect" type="button" class="btn btn-ghost-invert">Connect wallet</button>
+      </div>
     </div>
-    <h1>Images on Arkiv</h1>
-    <p>Store a public image, then retrieve the original.</p>
+    <p id="wallet-status" class="wallet-feedback" role="status" aria-live="polite"></p>
   </header>
 
-  <section aria-labelledby="upload-heading">
-    <h2 id="upload-heading">1. Store an image</h2>
-    <form id="upload-form">
-      <label for="file">PNG or JPEG image</label>
-      <input id="file" type="file" accept="image/png,image/jpeg" required aria-describedby="file-info" />
-      <p id="file-info" class="help">Up to 25 MiB. Start small: larger files need more wallet confirmations.</p>
+  <main id="workspace" class="workspace">
+    <h1 class="page-title">Store and retrieve images</h1>
 
-      <figure id="original-figure" hidden><img id="original" alt="Selected original image" /><figcaption>Original &middot; not sent yet</figcaption></figure>
+    <div class="cols">
+      <!-- ── Input panel ─────────────────────────────────────────────── -->
+      <section class="panel panel-input" aria-label="Image input">
+        <div class="tabs" role="tablist" aria-label="Mode">
+          <button id="store-tab" class="tab" type="button" role="tab" aria-selected="true" aria-controls="upload-form">Store</button>
+          <button id="retrieve-tab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="read-form">Retrieve</button>
+        </div>
 
-      <label for="wallet">Wallet</label>
-      <select id="wallet"><option value="">Looking for wallets&hellip;</option></select>
-      <div class="actions">
-        <button id="connect" type="button">Connect wallet</button>
-        <button id="switch" type="button">Use Tiramisu</button>
-      </div>
-      <p id="wallet-status" role="status"></p>
-      <p class="help">Tiramisu testnet &middot; Requires test GLM. <a href="https://stage.hub.arkiv.network/faucet" target="_blank" rel="noopener noreferrer">Get funds</a></p>
+        <form id="upload-form" role="tabpanel" aria-labelledby="store-tab">
+          <div class="field-head"><label for="file">Public image</label><span class="hint">PNG / JPEG</span></div>
+          <input id="file" class="sr-file" type="file" accept="image/png,image/jpeg" aria-describedby="file-info" tabindex="-1" />
+          <button id="pick-file" type="button" class="dropzone" aria-label="Choose a public PNG or JPEG image">
+            <span id="pick-empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m3 17 5-5 4 4 3-3 6 6"/></svg><span>Choose an image</span><small>Up to 25 MiB</small></span>
+            <span id="original-figure" hidden><img id="original" alt="Selected original image" /><span class="hint">Change image</span></span>
+          </button>
+          <p id="file-info" class="hint" role="status"></p>
 
-      <details>
-        <summary>Storage settings &amp; details</summary>
-        <p id="limits"></p>
-        <p>Original bytes go in the payload; attributes make images queryable. Larger files use chunks, joined in your browser when retrieved. No recompression.</p>
-        <label for="rpc">Tiramisu RPC</label>
-        <input id="rpc" type="url" autocomplete="off" spellcheck="false" />
-        <p class="help">Kept in this tab only. Use a browser-authorised URL if your provider requires an <a href="https://stage.hub.arkiv.network/api-keys" target="_blank" rel="noopener noreferrer">access key</a>. Never enter a private key. <a href="https://stage.hub.arkiv.network/networks" target="_blank" rel="noopener noreferrer">Network details</a></p>
-        <label for="expiration">Entity Expiration (blocks)</label>
-        <input id="expiration" type="number" min="64" max="15768000" step="1" value="43200" required />
-        <p class="help">Blocks are not a fixed duration in hours. For chunked files, availability ends when the first required part expires.</p>
-      </details>
+          <label for="expiration">Entity Expiration</label>
+          <input id="expiration" type="datetime-local" required />
+          <p id="expiration-help" class="hint">Approximate date</p>
 
-      <label class="consent" for="consent"><input id="consent" type="checkbox" required /><span>Make this image, filename and metadata (including GPS) public. Entity Expiration does not erase history.</span></label>
+          <button id="upload" type="submit" class="btn btn-primary btn-block">
+            <span>Store &amp; verify</span><span class="btn-glyph" aria-hidden="true">&#8599;</span>
+          </button>
+          <p id="approval-note" class="hint"></p>
+          <p id="upload-status" class="hint" role="status" aria-live="polite"></p>
 
-      <button id="upload" type="submit">Store image</button>
-    </form>
-    <p id="upload-status" role="status" aria-live="polite"></p>
-    <div id="upload-result" hidden>
-      <p>Keep the image key:</p>
-      <code id="uploaded-key"></code>
-      <p id="upload-summary"></p>
-      <details><summary>Confirmed transactions</summary><ul id="receipts"></ul></details>
+          <p class="panel-foot"><a href="https://stage.hub.arkiv.network/faucet" target="_blank" rel="noopener noreferrer">Get testnet funds &#8599;</a></p>
+        </form>
+
+        <form id="read-form" role="tabpanel" aria-labelledby="retrieve-tab" hidden>
+          <label for="image-key">Image key</label>
+          <input id="image-key" type="text" required spellcheck="false" autocomplete="off" placeholder="0x…" aria-describedby="key-help" />
+          <p id="key-help" class="hint">No wallet needed to retrieve.</p>
+          <button id="retrieve" type="submit" class="btn btn-primary btn-block">
+            <span>Retrieve image</span><span class="btn-glyph" aria-hidden="true">&#8599;</span>
+          </button>
+
+        </form>
+      </section>
+
+      <!-- ── Result panel ────────────────────────────────────────────── -->
+      <section class="panel panel-result" aria-label="Result">
+        <div class="panel-head">
+          <span class="eyebrow">[ RESULT ]</span>
+          <span id="result-state" class="hint" role="status">Ready</span>
+        </div>
+
+        <div id="result-empty" class="result-empty">
+          <div class="empty-art" aria-hidden="true">
+            <span class="art-chip">IMG</span>
+            <span class="art-link"></span>
+            <span class="art-bar"></span>
+            <span class="art-bar"></span>
+            <span class="art-link"></span>
+            <span class="art-chip art-chip-ink">&#10003;</span>
+          </div>
+          <p class="empty-title">Your verified image lands here.</p>
+        </div>
+
+        <p id="read-status" class="hint" role="status" aria-live="polite"></p>
+        <div id="download-result" hidden>
+          <figure class="recovered-figure">
+            <img id="recovered" alt="Image recovered from Arkiv and verified" />
+            <figcaption>Recovered from Arkiv · SHA-256 verified</figcaption>
+          </figure>
+          <div class="recovered-actions">
+            <a id="save" class="btn btn-primary">Download original<span class="btn-glyph" aria-hidden="true">&#8595;</span></a>
+            <p id="read-summary" class="hint"></p>
+          </div>
+          <p id="result-expiration" class="hint"></p>
+          <details><summary class="hint">Integrity check</summary><p class="hint">SHA-256 verifies the bytes, not the author.</p><code id="hash"></code></details>
+        </div>
+        <div id="upload-result" hidden>
+          <p class="hint label-line">Image key</p>
+          <code id="uploaded-key"></code>
+          <details>
+            <summary class="hint">Transactions</summary>
+            <ul id="receipts" class="hint list"></ul>
+          </details>
+        </div>
+      </section>
     </div>
-  </section>
 
-  <section aria-labelledby="read-heading">
-    <h2 id="read-heading">2. Retrieve and verify</h2>
-    <form id="read-form">
-      <label for="image-key">Image entity key</label>
-      <input id="image-key" type="text" required spellcheck="false" autocomplete="off" placeholder="0x&hellip;" aria-describedby="key-help" />
-      <p id="key-help" class="help">Filled after storing, or paste an existing key. No wallet needed.</p>
-      <button type="submit" id="retrieve">Retrieve image</button>
-    </form>
-    <p id="read-status" role="status" aria-live="polite"></p>
-    <div id="download-result" hidden>
-      <figure><img id="recovered" alt="Image recovered from Arkiv and verified" /><figcaption>Recovered from Arkiv</figcaption></figure>
-      <p id="read-summary"></p>
-      <p><a id="save" class="button">Download original</a></p>
-      <details><summary>Verification details</summary><p>SHA-256 checks file integrity, not the author’s identity.</p><code id="hash"></code></details>
-    </div>
-  </section>
+    <p id="inspection-status" class="hint" role="status" aria-live="polite"></p>
+    <section id="inspection" class="panel" aria-label="Retrieved entity inspection" hidden></section>
 
-  <footer>
-    <p>These packages are intended for testnet use.</p>
-    <p><a href="https://github.com/SantiagoDevRel/arkiv-images#readme">Documentation and code</a> &middot; <a href="https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/AGENTS.md">Agent guide</a></p>
-  </footer>
-</main>
-<script type="module" src="/src/main.ts"></script>
+    <footer class="site-foot">
+      <p>These packages are intended for testnet use.</p>
+      <p><a href="https://github.com/SantiagoDevRel/arkiv-images#readme">Package docs &#8599;</a> &middot; <a href="https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/AGENTS.md">Agent guide</a></p>
+    </footer>
+  </main>
+
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
