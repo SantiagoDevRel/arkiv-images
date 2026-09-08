@@ -1,0 +1,111 @@
+{
+  "package": "arkiv-images@0.1.0",
+  "sdk": "0.8.0",
+  "viem": "2.56.3",
+  "chunking": "0.1.0",
+  "node": "v22.22.3",
+  "chainId": 7738577,
+  "account": "0xa618a2736431f24c26f1c8dac9ca00ecc845a1c6",
+  "wallet": "Rabby / Arkiv Wallet",
+  "cases": [
+    {
+      "mode": "inline",
+      "format": "image/png",
+      "bytes": 120000,
+      "imageKey": "0x21a2b016bbcc1c7195401ad1fb93ad857d42956ec6e77ec3f3c63a800ecfc312",
+      "sha256": "0x31c2782dc1ad3ce9a983c9743ed67337125b433dc08e532da315ed58e63203a4",
+      "width": 320,
+      "height": 200,
+      "transactions": [
+        {
+          "hash": "0x5376fd09019268aff4d79399df49ccaf697c4c674d9b29a2b6c6ad438e20ae56",
+          "blockNumber": "197767",
+          "gasUsed": "4843780",
+          "calldataBytes": 122308,
+          "signedBytes": 122418,
+          "status": "success"
+        }
+      ],
+      "browserByteExact": true,
+      "byteExact": true,
+      "expiresAt": "240967"
+    },
+    {
+      "mode": "chunked",
+      "format": "image/png",
+      "bytes": 120001,
+      "imageKey": "0x85fb5d3f3a337e5cbb832c9a15afbcf5b9bb53ae2e8b62fd5fe13c0931543011",
+      "sha256": "0xc99a39198cd5767d1c5443044e09d554cbf6eddea0fb4f3d89c9bee346cfd0e6",
+      "width": 320,
+      "height": 200,
+      "transactions": [
+        {
+          "hash": "0x2f36b48cb3fca6f0d0caffd0e714bfd357b878e891288b4e69e8efc3d7dc0161",
+          "blockNumber": "197844",
+          "gasUsed": "111184",
+          "calldataBytes": 1988,
+          "signedBytes": 2096,
+          "status": "success"
+        },
+        {
+          "hash": "0x9687de326762655033de634206fcd19a1acd5f6de0144d4c4913741f2d92bf82",
+          "blockNumber": "197863",
+          "gasUsed": "4032200",
+          "calldataBytes": 101348,
+          "signedBytes": 101458,
+          "status": "success"
+        },
+        {
+          "hash": "0x570e64c58a45350bff5f4695a8413a1f0a4acc615a0d4fe2ab074f3fe7b075fe",
+          "blockNumber": "197869",
+          "gasUsed": "839840",
+          "calldataBytes": 21380,
+          "signedBytes": 21488,
+          "status": "success"
+        },
+        {
+          "hash": "0x26ffd70c7bb100591faf7270981478c79ec685a75b447c164fbc3235439a25b8",
+          "blockNumber": "197875",
+          "gasUsed": "45016",
+          "calldataBytes": 516,
+          "signedBytes": 624,
+          "status": "success"
+        },
+        {
+          "hash": "0x8ecb8c9be61e67da24b59e87b8c3605a6545bec71033c4710e7ebe9fa0219ae7",
+          "blockNumber": "197880",
+          "gasUsed": "125384",
+          "calldataBytes": 2500,
+          "signedBytes": 2608,
+          "status": "success"
+        }
+      ],
+      "browserByteExact": true,
+      "byteExact": true,
+      "expiresAt": "241044"
+    },
+    {
+      "mode": "inline",
+      "format": "image/jpeg",
+      "bytes": 2977,
+      "imageKey": "0xef4c88b48ca2f3f0f9a8069d339dff3f894d6ab7e707c3f4741d0e3c2937f472",
+      "sha256": "0x6505b34edf4866c89d73791c5b775ee8588ba62ba54249051891d7833d3b1684",
+      "width": 320,
+      "height": 200,
+      "transactions": [
+        {
+          "hash": "0xa2915a6a40e4ecaa7309193d60d48dbcb8cb51e588ff264806b6ebf06b43639e",
+          "blockNumber": "198040",
+          "gasUsed": "167792",
+          "calldataBytes": 5316,
+          "signedBytes": 5424,
+          "status": "success"
+        }
+      ],
+      "browserByteExact": true,
+      "byteExact": true,
+      "expiresAt": "241240"
+    }
+  ],
+  "lastReadVerifiedAt": "2026-09-08T21:55:43.748Z"
+}
