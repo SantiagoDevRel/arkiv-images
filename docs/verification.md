@@ -1,6 +1,6 @@
-# Verification — arkiv-images 0.1.0
+# Verification: arkiv-images 0.1.1
 
-Verification date: 2026-09-08. This report distinguishes real Tiramisu transactions, controlled RPC tests and release gates. The npm archive contains the verification snapshot taken before publication; the [source report](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/docs/verification.md) records subsequent registry installation evidence.
+Verification date: 2026-09-08. Version 0.1.1 corrects the Tiramisu setup links from the production Hub (still serving retired Braga) to the verified Hub staging pages. The storage implementation is unchanged from 0.1.0; only its exported version changes. Real writes below were made with 0.1.0, and the same entities were read again with 0.1.1. This report distinguishes real Tiramisu transactions, controlled RPC tests and release gates. The npm archive contains the verification snapshot taken before publication; the [source report](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/docs/verification.md) records subsequent registry installation evidence.
 
 ## Tested combination
 
@@ -13,7 +13,7 @@ Verification date: 2026-09-08. This report distinguishes real Tiramisu transacti
 | Sample tooling | Vite 8.2.2 |
 | Network | Tiramisu, RPC-confirmed chain ID 7738577 |
 | Live signer | Rabby, explicitly authorized Arkiv Wallet; address in the receipt evidence |
-| Browser automation | Playwright 1.62.1, installed Google Chrome; native pixel decoding |
+| Browser automation | Playwright 1.62.1, Google Chrome 152.0.7977.77; native pixel decoding |
 
 Other SDK versions, networks, Firefox/Safari, mobile wallet browsers and a real MetaMask extension signing flow are not claimed tested. MetaMask-compatible EIP-1193 requests and EIP-6963 discovery were exercised with an injected test wallet; Rabby performed the real writes.
 
@@ -43,7 +43,19 @@ Rendered widths: 390, 599, 600, 601, 768 and 1440 CSS pixels. DOM checks found n
 
 A fresh agent with only the package/sample READMEs, consumer guides and an integration objective installed the packed candidate in a new directory. It ran the exact minimal example, compiled every public type against actual SDK clients, and read the real 120,000-byte image from Tiramisu without a wallet. Invalid format, excessive size, invalid/missing key, unexpected digest and wrong network failed as documented. No blocking documentation gaps were found; its suggestion of a complete anonymous-read example was incorporated.
 
-Claude completed its source/security/logic/browser review after resuming a timed-out session. It independently retrieved all three live images and confirmed the recorded byte equality. It identified stale sample dependency contents and missing npm publication as blocking release gates. Those gates, clean registry consumption and source checkout verification are pending in this pre-publication snapshot; see the source report for their final status. Other observations were addressed through accurate error wording and documented JPEG limitations. The source repository includes the review resolution table in docs/claude-review.md.
+Version 0.1.0 was published at 2026-09-08T22:09:43Z with SHA-1 78aa4b0593dd4c9a03f0aebe350fb12e37a9b08d. A second clean directory installed it from npm, verified the registry lockfile, compiled every public type with strict TypeScript, executed both documented examples and retrieved both real inline/chunked PNGs without a wallet. The sample also passed npm ci and build from that registry version. All consumer guides were present in the installed package.
+
+Claude completed its source/security/logic/browser review after resuming a timed-out session. It independently retrieved all three live images and confirmed the recorded byte equality. It identified stale sample dependency contents and missing publication as release blockers. Both closed: a follow-up independently hashed the published tarball and served JavaScript, confirmed the 128-byte filename gate, and reported no code blockers. Full resolution table: docs/claude-review.md in the source repository.
+
+The 0.1.1 archive contains this pre-publication snapshot. Its registry install and final checkout evidence will be added to the source report after publication. Setup destinations were inspected as rendered pages: staging /networks shows Tiramisu 7738577 and the correct RPC, /api-keys offers Tiramisu keys, and /faucet requires connecting/signing in with a wallet. No new key or faucet claim was performed. Production /api-keys returned 404 and /networks still showed Braga; this is why 0.1.1 changes those links.
+
+## Final registry checks
+
+Version **0.1.1** is published at 2026-09-08T22:18:33.078Z. The registry tarball SHA-1 is `aa60aab4e5694a30de55e1e01c87415559aae435`; its SHA-512 integrity was independently recalculated and matches the sample lockfile. See [release evidence](release-evidence.json). The npm archive contains the pre-publication snapshot above and retains a 0.1.0 report heading from the baseline; its package manifest and README identify 0.1.1 correctly. This source report corrects that heading and is the final post-publication evidence.
+
+A fresh agent installed **0.1.1 from npm** in another new directory, verified registry URL/integrity and shipped guides, ran the exact README examples, compiled all public types with strict TypeScript (without skipLibCheck), and independently verified SHA-256 for both real inline and chunked PNGs. No documentation blockers, wallet actions or network writes. The sample now pins 0.1.1 with a registry lockfile; its build and all browser regression cases passed again. The browser test explicitly checks the displayed installed version. A fresh real-network JPEG read in the final sample rendered successfully at 390/768/1440, with no page overflow.
+
+Claude independently corroborated the staging links, npm publication and unchanged storage code in 0.1.1. No code blockers remained; the source report heading is corrected here. Final default-branch checkout verification is the remaining source release gate.
 
 ## Preview and scope
 

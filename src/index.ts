@@ -4,7 +4,7 @@ import { eq } from '@arkiv-network/sdk/query';
 import { uploadFile, downloadFile, hashFile, ChunkingError, DEFAULT_CHUNK_BYTES, type ChunkingPublicClient, type ChunkingWalletClient, type Progress } from 'arkiv-chunking';
 import type { Hex } from 'viem';
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.1.1';
 export const IMAGE_TYPE = 'arkiv-images/v1';
 export const INLINE_MAX_BYTES = 120_000;
 export const MAX_IMAGE_BYTES = 25 * 1024 * 1024;

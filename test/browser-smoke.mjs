@@ -30,6 +30,8 @@ await page.addInitScript(()=>{
   window.ethereum={isMetaMask:true,request:args=>window.walletRequest(args),on(){},removeListener(){}};
 });
 await page.goto(process.env.SAMPLE_URL??'http://127.0.0.1:3082');
+const packageVersion=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8')).version;
+await page.waitForFunction(version=>document.querySelector('#version')?.textContent===`v${version}`,packageVersion);
 await page.waitForFunction(()=>document.querySelector('#wallet')?.options[0]?.text.includes('MetaMask'));
 await page.screenshot({path:join(output,'empty-1440.png'),fullPage:true});
 assert.match(await page.locator('#read-status').innerText(),/Todavía/);
@@ -82,6 +84,6 @@ assert.equal(await page.locator('#upload-result').isVisible(),false);reject=fals
 wrongChain=true;await page.locator('#upload').click();await page.waitForFunction(()=>document.querySelector('#upload-status').textContent.includes('Tiramisu'));wrongChain=false;
 await page.reload();await page.locator('#image-key').fill(results[0].imageKey);await page.locator('#retrieve').click();await page.waitForFunction(()=>document.querySelector('#read-status').dataset.state==='success');
 assert.match(await page.locator('#read-status').innerText(),/identidad/);
-await writeFile(join(output,'results.json'),JSON.stringify({results,transactions:rpc.transactions,account:TEST_ACCOUNT,kind:'mocked RPC and wallet with real SDK and browser decoder'},null,2));
+await writeFile(join(output,'results.json'),JSON.stringify({packageVersion,results,transactions:rpc.transactions,account:TEST_ACCOUNT,kind:'mocked RPC and wallet with real SDK and browser decoder'},null,2));
 console.log(JSON.stringify({ok:true,output,roundtrips:3,viewports:6,transactions:rpc.transactions.length}));
 await browser.close();

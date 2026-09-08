@@ -5,13 +5,14 @@ import assert from 'node:assert/strict';
 import { createPublicClient } from '@arkiv-network/sdk';
 import { tiramisu } from '@arkiv-network/sdk/chains';
 import { http, serializeTransaction } from 'viem';
-import { retrieveImage } from '../dist/index.js';
+import { retrieveImage, VERSION } from '../dist/index.js';
 import { png } from '../test/fixtures.mjs';
 
 const account='0xa618a2736431f24c26f1c8dac9ca00ecc845a1c6';
 const client=createPublicClient({chain:tiramisu,transport:http(tiramisu.rpcUrls.default.http[0],{retryCount:0,timeout:30000,fetchOptions:{cache:'no-store'}})});
 assert.equal(await client.getChainId(),7738577);
 const evidence=JSON.parse(await readFile(new URL('../docs/testnet-evidence.json',import.meta.url),'utf8'));
+evidence.readerPackage=`arkiv-images@${VERSION}`;
 for(const entry of evidence.cases){
   const original=entry.format==='image/jpeg'?new Uint8Array(await readFile(new URL('../test/fixtures/public.jpg',import.meta.url))):png(entry.bytes,320,200);
   const expected=`0x${createHash('sha256').update(original).digest('hex')}`;

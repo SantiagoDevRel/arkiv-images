@@ -1,17 +1,17 @@
 # Image storage sample
 
-A minimal browser dapp: choose a public PNG/JPEG, connect your wallet on Tiramisu, store its original bytes, retrieve and render the verified image. It imports `arkiv-images@0.1.0` from npm; no local implementation alias or copied image/chunking code.
+A minimal browser dapp: choose a public PNG/JPEG, connect your wallet on Tiramisu, store its original bytes, retrieve and render the verified image. It imports `arkiv-images@0.1.1` from npm; no local implementation alias or copied image/chunking code.
 
 **These packages are intended for testnet use.**
 
 ## Clean checkout
 
-Node **22.12+** and npm; tested Node **22.22.3**. Dependencies: `arkiv-images@0.1.0`, SDK `0.8.0`, viem `2.56.3`; build tooling TypeScript `5.9.3`, Vite `8.2.2`. The page displays the version exported by the installed library.
+Node **22.12+** and npm; tested Node **22.22.3**. Dependencies: `arkiv-images@0.1.1`, SDK `0.8.0`, viem `2.56.3`; build tooling TypeScript `5.9.3`, Vite `8.2.2`. The page displays the version exported by the installed library.
 
 ```sh
 git clone --branch feat/image-storage https://github.com/SantiagoDevRel/arkiv-images.git
 cd arkiv-images/sample
-npm install
+npm ci
 npm run build
 npm run dev
 ```
@@ -30,6 +30,8 @@ Open **http://127.0.0.1:3082**. No `.env`, private key, server signer or API int
 The [package README](../README.md) is the source of truth for data model, limits, network setup, provider/faucet links, API and error recovery. A chunked read makes multiple RPC queries; the browser assembles the bytes. No PDF, gallery, encryption, compression or upload service is included.
 
 Errors stay visible in the affected step. Missing/expired entities, missing/corrupt chunks, provider failures, rejected signatures and changed accounts stop the operation; no partial image is displayed. Inspect confirmed transaction hashes before repeating a failed upload. A file manifest key printed after failure is recovery evidence, not an image key.
+
+On Windows, stop this sample's dev server before running `npm ci` again. Otherwise its native build binding can be locked and npm may report `EPERM`. Do not terminate unrelated processes.
 
 ## Agents and verification
 
