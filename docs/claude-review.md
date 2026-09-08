@@ -1,5 +1,13 @@
 # Claude review — 2026-09-08
 
+## Current sample: Claude Design + Lovable revision
+
+Claude Code independently reviewed the new wallet, calendar, entity inspection and presentation modules, their integration, tests and the installed SDK/chunking source. It reported **no blockers**. It traced the actual SDK signature path, checked pagination and expiration semantics, and queried Tiramisu block timing read-only (three seconds behind its clock). It ran no tests/build/install and made no writes.
+
+Three non-blocking findings were corrected: remove the decorative network dot that implied connectivity, hide empty-state artwork while the stored image is being retrieved, and move provider selection inside the upload error handler. Browser regression now captures the successful-store/ongoing-retrieval transition and asserts that receipts remain visible while empty artwork is hidden. All 29 tests, the sample build and nine-width/native-zoom browser checks passed after those corrections.
+
+Its initial pass did not open screenshots; visual review by the implementing agent is recorded separately in verification.md. Earlier review sections below describe previous iterations and do not imply the removed RPC settings or public-data checkbox remain in the current interface.
+
 Claude Code reviewed package source, sample, guides, tests and the packed-file allowlist. It ran 13 tests, type checking, the sample build, browser regression, package dry-run, npm registry checks and independent read-only Tiramisu queries. All three recorded images were byte-exact in its independent verification; it also checked transaction receipts.
 
 | Finding | Resolution |
