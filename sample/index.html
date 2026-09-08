@@ -1,49 +1,90 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="color-scheme" content="dark" /><title>Imágenes en Arkiv</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Images on Arkiv</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
 </head>
-<body><main>
-  <header><p class="eyebrow">[ SAMPLE · ARKIV-IMAGES <span id="version"></span> ]</p>
-    <h1>Tu imagen, recuperada desde Arkiv.</h1>
-    <p>Sube un PNG o JPEG público. Guarda sus bytes en Arkiv entities y recupera la imagen original para comprobar el resultado.</p>
+<body>
+<main>
+  <header>
+    <div class="brand-row">
+      <img class="wordmark" src="/assets/arkiv-wordmark-white.svg" alt="Arkiv" />
+      <p class="eyebrow">[ SAMPLE &middot; ARKIV-IMAGES <span id="version"></span> ]</p>
+    </div>
+    <h1>Images on Arkiv</h1>
+    <p>Store a public image, then retrieve the original.</p>
   </header>
+
   <section aria-labelledby="upload-heading">
-    <h2 id="upload-heading">1. Elige tu imagen</h2>
+    <h2 id="upload-heading">1. Store an image</h2>
     <form id="upload-form">
-      <label for="file">Imagen PNG o JPEG</label>
+      <label for="file">PNG or JPEG image</label>
       <input id="file" type="file" accept="image/png,image/jpeg" required aria-describedby="file-info" />
-      <p id="file-info" class="help">Selecciona una imagen para ver su tamaño y cómo se guardará.</p>
-      <figure id="original-figure" hidden><img id="original" alt="Imagen original seleccionada" /><figcaption>Original · todavía no se ha enviado</figcaption></figure>
-      <details><summary>Cómo se guardan los bytes</summary>
-        <p id="limits"></p><p>El payload contiene bytes; los atributos permiten consultar por tipo, formato, tamaño y dimensiones. Los fragmentos se unen en tu navegador después de consultarlos. Guardamos el archivo exacto: no lo convertimos a texto ni lo recomprimimos.</p>
+      <p id="file-info" class="help">Up to 25 MiB. Start small: larger files need more wallet confirmations.</p>
+
+      <figure id="original-figure" hidden><img id="original" alt="Selected original image" /><figcaption>Original &middot; not sent yet</figcaption></figure>
+
+      <label for="wallet">Wallet</label>
+      <select id="wallet"><option value="">Looking for wallets&hellip;</option></select>
+      <div class="actions">
+        <button id="connect" type="button">Connect wallet</button>
+        <button id="switch" type="button">Use Tiramisu</button>
+      </div>
+      <p id="wallet-status" role="status"></p>
+      <p class="help">Tiramisu testnet &middot; Requires test GLM. <a href="https://stage.hub.arkiv.network/faucet" target="_blank" rel="noopener noreferrer">Get funds</a></p>
+
+      <details>
+        <summary>Storage settings &amp; details</summary>
+        <p id="limits"></p>
+        <p>Original bytes go in the payload; attributes make images queryable. Larger files use chunks, joined in your browser when retrieved. No recompression.</p>
+        <label for="rpc">Tiramisu RPC</label>
+        <input id="rpc" type="url" autocomplete="off" spellcheck="false" />
+        <p class="help">Kept in this tab only. Use a browser-authorised URL if your provider requires an <a href="https://stage.hub.arkiv.network/api-keys" target="_blank" rel="noopener noreferrer">access key</a>. Never enter a private key. <a href="https://stage.hub.arkiv.network/networks" target="_blank" rel="noopener noreferrer">Network details</a></p>
+        <label for="expiration">Entity Expiration (blocks)</label>
+        <input id="expiration" type="number" min="64" max="15768000" step="1" value="43200" required />
+        <p class="help">Blocks are not a fixed duration in hours. For chunked files, availability ends when the first required part expires.</p>
       </details>
-      <label for="wallet">Wallet</label><select id="wallet"><option value="">Buscando wallets…</option></select>
-      <div class="actions"><button id="connect" type="button">Conectar wallet</button><button id="switch" type="button">Usar Tiramisu</button></div>
-      <p id="wallet-status" role="status">Conecta MetaMask o Rabby para subir. Puedes recuperar una imagen sin wallet.</p>
-      <p class="help">Red: Tiramisu testnet. Necesitas GLM de prueba para guardar. <a href="https://stage.hub.arkiv.network/faucet" target="_blank" rel="noopener noreferrer">Obtener fondos</a> · <a href="https://stage.hub.arkiv.network/networks" target="_blank" rel="noopener noreferrer">Ver la red</a></p>
-      <details><summary>Conexión RPC y Entity Expiration</summary>
-        <label for="rpc">RPC de Tiramisu</label><input id="rpc" type="url" autocomplete="off" spellcheck="false" />
-        <p class="help">Esta URL permanece en la pestaña. Si tu proveedor exige una access key, usa una URL autorizada para navegador. <a href="https://stage.hub.arkiv.network/api-keys" target="_blank" rel="noopener noreferrer">Obtener access key</a>. Nunca ingreses una clave privada.</p>
-        <label for="expiration">Entity Expiration (bloques)</label><input id="expiration" type="number" min="64" max="15768000" step="1" value="43200" required />
-        <p class="help">Los bloques no representan una duración fija en horas. Para archivos fragmentados, la disponibilidad termina cuando vence la primera parte necesaria.</p>
-      </details>
-      <label class="consent" for="consent"><input id="consent" type="checkbox" required /><span>Entiendo que la imagen, su nombre y sus metadatos originales (incluido GPS si lo contiene) serán públicos. Entity Expiration no borra el historial.</span></label>
-      <button id="upload" type="submit">Guardar imagen</button>
+
+      <label class="consent" for="consent"><input id="consent" type="checkbox" required /><span>Make this image, filename and metadata (including GPS) public. Entity Expiration does not erase history.</span></label>
+
+      <button id="upload" type="submit">Store image</button>
     </form>
-    <p id="upload-status" role="status" aria-live="polite">Todavía no has subido una imagen.</p>
-    <div id="upload-result" hidden><p>Conserva la clave de la imagen:</p><code id="uploaded-key"></code><p id="upload-summary"></p><details><summary>Transacciones confirmadas</summary><ul id="receipts"></ul></details></div>
+    <p id="upload-status" role="status" aria-live="polite"></p>
+    <div id="upload-result" hidden>
+      <p>Keep the image key:</p>
+      <code id="uploaded-key"></code>
+      <p id="upload-summary"></p>
+      <details><summary>Confirmed transactions</summary><ul id="receipts"></ul></details>
+    </div>
   </section>
-  <section aria-labelledby="read-heading"><h2 id="read-heading">2. Recupera y verifica</h2>
-    <form id="read-form"><label for="image-key">Clave de la entity de imagen</label><input id="image-key" type="text" required spellcheck="false" autocomplete="off" placeholder="0x…" aria-describedby="key-help" />
-      <p id="key-help" class="help">Se completa al guardar. También puedes pegar una clave existente, incluso después de recargar esta página.</p>
-      <button type="submit" id="retrieve">Recuperar imagen</button></form>
-    <p id="read-status" role="status" aria-live="polite">Todavía no has recuperado una imagen.</p>
-    <div id="download-result" hidden><figure><img id="recovered" alt="Imagen recuperada desde Arkiv y verificada" /><figcaption>Recuperada desde Arkiv</figcaption></figure><p id="read-summary"></p><p>SHA-256</p><code id="hash"></code><p><a id="save" class="button">Descargar original verificado</a></p></div>
+
+  <section aria-labelledby="read-heading">
+    <h2 id="read-heading">2. Retrieve and verify</h2>
+    <form id="read-form">
+      <label for="image-key">Image entity key</label>
+      <input id="image-key" type="text" required spellcheck="false" autocomplete="off" placeholder="0x&hellip;" aria-describedby="key-help" />
+      <p id="key-help" class="help">Filled after storing, or paste an existing key. No wallet needed.</p>
+      <button type="submit" id="retrieve">Retrieve image</button>
+    </form>
+    <p id="read-status" role="status" aria-live="polite"></p>
+    <div id="download-result" hidden>
+      <figure><img id="recovered" alt="Image recovered from Arkiv and verified" /><figcaption>Recovered from Arkiv</figcaption></figure>
+      <p id="read-summary"></p>
+      <p><a id="save" class="button">Download original</a></p>
+      <details><summary>Verification details</summary><p>SHA-256 checks file integrity, not the author’s identity.</p><code id="hash"></code></details>
+    </div>
   </section>
-  <footer><p>These packages are intended for testnet use.</p><p><a href="https://github.com/SantiagoDevRel/arkiv-images#readme">Documentación y código</a> · <a href="https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/AGENTS.md">Guía para agentes</a></p></footer>
-</main><script type="module" src="/src/main.ts"></script></body></html>
+
+  <footer>
+    <p>These packages are intended for testnet use.</p>
+    <p><a href="https://github.com/SantiagoDevRel/arkiv-images#readme">Documentation and code</a> &middot; <a href="https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/AGENTS.md">Agent guide</a></p>
+  </footer>
+</main>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
