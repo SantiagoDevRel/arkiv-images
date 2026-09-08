@@ -16,3 +16,13 @@ The first call timed out after 900 seconds; resuming the same session returned t
 Final registry/cache verification will be recorded in [verification.md](verification.md). The initial review's STATUS: OK meant the audit completed; it did not override its two blocking release findings.
 
 Final patch review: Claude independently fetched the setup destinations and confirmed staging serves Tiramisu while production still serves Braga and returns 404 for access keys. It verified that the only runtime change for 0.1.1 is VERSION, and reported no code blockers. The stale report heading was corrected in source; the immutable npm snapshot is explicitly identified in verification.md. Publication, sample version and registry integrity were independently corroborated by Claude. Consumer 0.1.1 integration also passed separately. Public demo deployment and Hub stage integration remain intentionally outside this preview release.
+
+## Claude Design and concise English sample
+
+A separate Claude Code session reviewed the actual design integration, English runtime copy and rendered screenshots. Its first pass identified a hidden size limit, inconsistent Store/upload terminology and repeated next-step instructions. Those were corrected. The required literal testnet notice was retained despite a suggested paraphrase, because the delivery requirement takes precedence.
+
+The final pass inspected source and 390/768/1440 real-network screenshots plus the native-zoom artifact. It found no code/UI blocker and confirmed wallet/chain guards, public metadata consent, measured transaction count and failure recovery evidence. The author-identity caveat remains accessible under native **Verification details** as a deliberate concise-copy decision.
+
+Its release finding was that the source links needed the new interface and official SVG on the documented default branch. The initial branch assessment used a stale local ref. After PR #2 merged, Claude verified GitHub's remote default `feat/image-storage` at `0b27dfa`, the English page and consumer guide, and the official SVG's hash. It explicitly closed the finding with no remaining blockers. The final review was read-only; it inspected evidence without rerunning the test suite.
+
+Grok was also invoked for the requested clarity review. Its service returned an out-of-usage error before providing a review. No Grok review is claimed. No sample deployment was performed.
