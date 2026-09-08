@@ -14,6 +14,8 @@ The current sample replaces the earlier settings/consent interface described in 
 
 The environment/version table below still applies. Real MetaMask signing, physical mobile wallets, other browsers/networks and a live 25 MiB upload remain unverified. Local preview remains at `http://127.0.0.1:3082/`; no public sample deployment has been performed.
 
+Clean revision check: a fresh clone of implementation commit `93ea4a5` ran the sample's documented `npm ci` and `npm run build` with the registry dependency tree (`arkiv-images@0.1.1`, SDK 0.8.0, viem 2.56.3). Its isolated browser at the documented alternate port retrieved the new JPEG and existing 120,001-byte chunked PNG from real Tiramisu, rendered their inspectors and downloaded exact original bytes without a wallet or page errors. Claude's follow-up directly viewed three responsive success captures and the store-to-retrieve loading capture; it closed all findings with no blockers. The independent checklist review confirmed the seven requested interface changes.
+
 Verification date: 2026-09-08. Version 0.1.1 corrects the Tiramisu setup links from the production Hub (still serving retired Braga) to the verified Hub staging pages. The storage implementation is unchanged from 0.1.0; only its exported version changes. Real writes below were made with 0.1.0, and the same entities were read again with 0.1.1. This report distinguishes real Tiramisu transactions, controlled RPC tests and release gates. The npm archive contains the verification snapshot taken before publication; the [source report](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/docs/verification.md) records subsequent registry installation evidence.
 
 ## Tested combination

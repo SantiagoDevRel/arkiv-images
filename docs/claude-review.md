@@ -8,6 +8,8 @@ Three non-blocking findings were corrected: remove the decorative network dot th
 
 Its initial pass did not open screenshots; visual review by the implementing agent is recorded separately in verification.md. Earlier review sections below describe previous iterations and do not imply the removed RPC settings or public-data checkbox remain in the current interface.
 
+In its follow-up, Claude read the corrected source and directly viewed all four rendered captures: 390, 768 and 1440 px successes plus the store-to-retrieve transition. It explicitly closed all three findings and reported no blockers. The wide connected-address button at the middle breakpoint was noted as cosmetic; it remains readable and usable. This was a read-only review, with no additional signing or deployment.
+
 Claude Code reviewed package source, sample, guides, tests and the packed-file allowlist. It ran 13 tests, type checking, the sample build, browser regression, package dry-run, npm registry checks and independent read-only Tiramisu queries. All three recorded images were byte-exact in its independent verification; it also checked transaction receipts.
 
 | Finding | Resolution |
