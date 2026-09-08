@@ -63,6 +63,10 @@ The [Claude Design export](design.md) is integrated with the real sample. All co
 
 The final copy passed the sample build, all three controlled browser roundtrips, six widths, keyboard disclosures and native 200% zoom. A fresh real-network JPEG read in this English interface displayed package v0.1.1 and decoded at 390/768/1440 with no page overflow. Grok was also requested for the copy review, but its service returned an out-of-usage error; no Grok review is claimed.
 
+Measured contrast: field border against its background 4.75:1, primary button text 7.01:1, help text 11.17:1. These probes cover those roles, not a blanket accessibility certification.
+
+After [PR #2](https://github.com/SantiagoDevRel/arkiv-images/pull/2) merged, the documented default branch `feat/image-storage` at `0b27dfa` was verified in a separate clean checkout: `npm ci`, `npm run build`, `npm run dev -- --port 3099`, English DOM and official wordmark, then a wallet-free real Tiramisu JPEG retrieval and byte-exact 2,977-byte download. The separate port avoids the running developer preview. The lockfile resolves arkiv-images 0.1.1 from npm, not a local alias. Claude independently checked GitHub's remote default files and closed its source-availability finding; no remaining blockers from its review.
+
 ## Preview and scope
 
 The sample is available locally at http://127.0.0.1:3082 for developer review before deployment. No public demo deployment is claimed. The Arkiv Hub catalogue entry remains pending because its live-demo prerequisite cannot be met until that review/deploy step. No encryption, PDFs, new skills, MCP integration, scaffolding or unrelated Hub changes were added.
