@@ -4,7 +4,7 @@ Store a public PNG or JPEG as queryable Arkiv entities, then retrieve and displa
 
 **These packages are intended for testnet use.**
 
-Version **0.1.0**. See [verification](docs/verification.md) for release evidence and [the npm registry](https://www.npmjs.com/package/arkiv-images/v/0.1.0) for availability. A locally packed artifact is not a published release.
+Version **0.1.1**. See [verification](docs/verification.md) for release evidence and [the npm registry](https://www.npmjs.com/package/arkiv-images/v/0.1.1) for availability. A locally packed artifact is not a published release.
 
 ## Install and inspect an image
 
@@ -15,7 +15,7 @@ mkdir image-consumer
 cd image-consumer
 npm init -y
 npm pkg set type=module
-npm install --save-exact arkiv-images@0.1.0 @arkiv-network/sdk@0.8.0 viem@2.56.3
+npm install --save-exact arkiv-images@0.1.1 @arkiv-network/sdk@0.8.0 viem@2.56.3
 ```
 
 Create `inspect.mjs`:
@@ -38,7 +38,7 @@ Expected: PNG, width `1`, height `1`, byte length `70`; mode `inline`, `entityCo
 
 ## Store and retrieve on Tiramisu
 
-Use **Tiramisu testnet, chain ID 7738577**, exported by `@arkiv-network/sdk/chains`. [Network connection details](https://hub.arkiv.network/networks), [test GLM faucet](https://hub.arkiv.network/faucet) and [access keys](https://hub.arkiv.network/api-keys) are provided by the Hub. The RPC used below allows anonymous reads; write access and quotas depend on the provider. A provider access key does not replace a signing wallet. Never put an administrative provider key in a browser.
+Use **Tiramisu testnet, chain ID 7738577**, exported by `@arkiv-network/sdk/chains`. [Network connection details](https://stage.hub.arkiv.network/networks), [test GLM faucet](https://stage.hub.arkiv.network/faucet) and [access keys](https://stage.hub.arkiv.network/api-keys) are provided by the Hub staging environment, verified on 2026-09-08. The production Hub still showed retired Braga at verification time. The faucet and access-key pages require connecting/signing in with your own wallet; follow their on-screen verification and cooldown requirements. No faucet claim or new access-key issuance was needed or tested in this run. The RPC used below allows anonymous reads; write access and quotas depend on the provider. A provider access key does not replace a signing wallet. Never put an administrative provider key in a browser.
 
 The [sample](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/README.md) uses **MetaMask or Rabby** to sign with the visitor's own wallet. No shared server signer or private key is needed. For a Node integration, configure a dedicated test wallet key **locally**, outside the checkout. Do not send private keys to an agent or put them in chat.
 
