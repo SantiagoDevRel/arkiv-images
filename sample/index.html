@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Images on Arkiv</title>
+  <script>try { if (localStorage.getItem('arkiv-images-theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch { /* Dark remains the default if storage is unavailable. */ }</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
@@ -22,8 +23,12 @@
         <span class="net">Tiramisu testnet</span>
         <label for="wallet" class="sr-only">Wallet</label>
         <select id="wallet"><option value="">Looking for wallets…</option></select>
-        <button id="connect" type="button" class="btn btn-ghost-invert">Connect wallet</button>
+        <button id="connect" type="button" class="btn btn-connect">Connect wallet</button>
       </div>
+      <button id="theme-toggle" type="button" class="theme-toggle" aria-label="Switch to light mode" title="Switch to light mode">
+        <svg class="sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+        <svg class="moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.8 13.3A9 9 0 0 1 10.7 3.2 9 9 0 1 0 20.8 13.3Z"/></svg>
+      </button>
     </div>
     <p id="wallet-status" class="wallet-feedback" role="status" aria-live="polite"></p>
   </header>
@@ -99,8 +104,10 @@
           </figure>
           <div class="recovered-actions">
             <a id="save" class="btn btn-primary">Download original<span class="btn-glyph" aria-hidden="true">&#8595;</span></a>
+            <a id="view-entity" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">View entity &#8599;</a>
             <p id="read-summary" class="hint"></p>
           </div>
+          <details id="entity-links" hidden><summary class="hint">All entities</summary><ul id="entity-link-list" class="list"></ul></details>
           <p id="result-expiration" class="hint"></p>
           <details><summary class="hint">Integrity check</summary><p class="hint">SHA-256 verifies the bytes, not the author.</p><code id="hash"></code></details>
         </div>

@@ -472,7 +472,7 @@ pre {
 .attribute-table th:nth-child(1) { width: 23%; }
 .attribute-table th:nth-child(2) { width: 18%; }
 .attribute-table td { word-break: normal; }
-.payload-preview { white-space: pre-wrap; overflow-wrap: anywhere; }
+.payload-preview { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; }
 .manifest-json, .byte-range { font-size: 14px; overflow-wrap: anywhere; }
 @media (max-width: 600px) {
   .panel { padding: 16px; border-radius: 16px; }
@@ -490,4 +490,41 @@ pre {
   .art-chip { width: 48px; height: 56px; }
   .empty-art { gap: 6px; }
   .btn { white-space: normal; }
+}
+
+/* Theme values mirror the existing Arkiv dark surface/neutral tokens. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #f0ede8;
+  --sand: #161616;
+  --white: #202020;
+  --stone: #393939;
+  --stone-strong: #525252;
+  --line-field: #898478;
+  --muted: #b0ada7;
+  --blue: #a3a8ff;
+}
+.topbar { background: #111111; color: #f6f4ef; }
+#wallet, .wallet-feedback, .wallet-feedback[data-state="error"] { color: #f6f4ef; }
+.btn-connect { background: var(--orange); color: #111111; border: 1px solid var(--orange); }
+.btn-connect:hover { background: #ff916b; border-color: #ff916b; }
+.btn-secondary { border: 1px solid var(--line-field); color: var(--ink); background: var(--white); }
+.btn-secondary:hover { background: var(--sand); color: var(--ink); }
+.theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex: 0 0 44px; border: 1px solid #898478; border-radius: 8px; background: transparent; color: #f6f4ef; cursor: pointer; }
+.theme-toggle:hover { background: #303030; }
+[data-theme="dark"] .moon, [data-theme="light"] .sun { display: none; }
+[data-theme="dark"] :focus-visible { outline-color: var(--orange); }
+[data-theme="dark"] .btn-primary { background: var(--orange); border-color: var(--orange); color: #111111; box-shadow: none; }
+[data-theme="dark"] .btn-primary:hover { background: #ff916b; }
+[data-theme="dark"] .btn-glyph { color: #111111; }
+[data-theme="dark"] .entity-stage[aria-pressed="true"] { background: #362821; border-color: var(--orange); box-shadow: inset 0 0 0 1px var(--orange); }
+[data-theme="dark"] .dropzone:hover { background: #292929; }
+.verified-stage, .art-chip-ink, pre { background: #111111; color: #f6f4ef; }
+.verified-stage small { color: #f6f4ef; }
+.entity-explorer { display: inline-block; margin-top: 12px; font-size: 14px; }
+#entity-link-list { display: flex; flex-wrap: wrap; gap: 12px 20px; max-height: 180px; overflow-y: auto; list-style: none; padding-left: 0; font-size: 14px; }
+@media (max-width: 900px) {
+  .brand { order: 1; flex: 1; }
+  .theme-toggle { order: 2; }
+  .wallet-bar { order: 3; }
 }
