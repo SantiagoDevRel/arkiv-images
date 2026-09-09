@@ -1,0 +1,148 @@
+{
+  "at": "2026-09-09T12:23:12.996Z",
+  "base": "https://stage.hub.arkiv.network",
+  "name": "ARKIV-STORE-IMAGES",
+  "package": "arkiv-images@0.1.1",
+  "layouts": [
+    {
+      "theme": "dark",
+      "width": 390,
+      "expanded": false,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "expanded": true,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "expanded": false,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "expanded": true,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "expanded": false,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "expanded": true,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "expanded": false,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "expanded": true,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "expanded": false,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "expanded": true,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "expanded": false,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "expanded": true,
+      "noOverflow": true,
+      "typography": {
+        "font": "\"Brutal Type\", \"Space Grotesk\", ui-sans-serif, system-ui, sans-serif",
+        "size": "20px"
+      }
+    }
+  ],
+  "version": {
+    "commit": "26edcac4ea18b39551301f1bb87f0a366eed566b",
+    "shortCommit": "26edcac",
+    "ref": "develop",
+    "builtAt": "2026-09-09T12:16:53Z",
+    "deployEnv": "staging"
+  },
+  "links": {
+    "Try sample dapp": "https://arkiv-images-example.vercel.app",
+    "Sample source": "https://github.com/SantiagoDevRel/arkiv-images/tree/feat/image-storage/sample",
+    "Documentation": "https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/README.md",
+    "View on npm": "https://www.npmjs.com/package/arkiv-images/v/0.1.1"
+  },
+  "clipboard": true,
+  "liveImage": {
+    "url": "https://arkiv-images-example.vercel.app/",
+    "bytes": 120001,
+    "byteExact": true,
+    "wallet": false
+  }
+}

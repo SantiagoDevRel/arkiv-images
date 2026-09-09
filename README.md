@@ -207,6 +207,7 @@ No multi-transaction atomicity, automatic write retries/resume, deduplication, d
 ## Sample, agent guides and development
 
 - [Live sample](https://arkiv-images-example.vercel.app), consuming `arkiv-images@0.1.1` from npm. [Deployment verification](docs/sample-review-v3.md) distinguishes real Tiramisu reads from controlled wallet tests.
+- Listed in the Hub as [ARKIV-STORE-IMAGES](https://stage.hub.arkiv.network/tools#tool-arkiv-store-images). The npm package name remains `arkiv-images`.
 - [Sample README](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/README.md): source checkout, localhost commands and visitor-wallet flow.
 - [Consumer AGENTS.md](AGENTS.md) and [sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/AGENTS.md). Give these guides to your agent explicitly. It will not necessarily read files under `node_modules` automatically. Each CLAUDE.md points to the corresponding AGENTS.md.
 - [Verification](docs/verification.md): exact runtimes, dependency versions, simulated vs real checks, publication and unresolved gates.
