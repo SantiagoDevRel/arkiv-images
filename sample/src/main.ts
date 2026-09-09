@@ -6,6 +6,7 @@ import { connectWallet, guardWallet, guardedWalletClient } from './wallet';
 import { dateToBlocks, estimateExpirationDate, toLocalDateTimeInput, ExpirationInputError } from './expiration';
 import { inspectImageEntities } from './inspection';
 import { renderInspection } from './inspector-view';
+import { entityUrl, transactionUrl } from './explorer';
 import './style.css';
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => {
@@ -21,7 +22,17 @@ let detachWallet: (() => void) | undefined;
 let busy = false, selectionId = 0, originalUrl: string | undefined, recoveredUrl: string | undefined;
 let selected: { bytes: Uint8Array; filename: string } | undefined;
 let stored: { key: Hex; bytes: Uint8Array; sha256: Hex } | undefined;
-const explorer = tiramisu.blockExplorers?.default.url;
+function syncTheme() {
+  const label = document.documentElement.dataset.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  el('theme-toggle').setAttribute('aria-label', label); el('theme-toggle').title = label;
+}
+el('theme-toggle').addEventListener('click', () => {
+  const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem('arkiv-images-theme', theme); } catch { /* The toggle also works without storage. */ }
+  syncTheme();
+});
+syncTheme();
 el('version').textContent = `v${VERSION}`;
 el<HTMLInputElement>('expiration').value = toLocalDateTimeInput(new Date(Date.now() + 86400000));
 el('expiration-help').textContent = `Approximate date \u00b7 ${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
@@ -29,8 +40,7 @@ el('pick-file').addEventListener('click', () => el<HTMLInputElement>('file').cli
 function status(id: string, message: string, state = 'idle') { el(id).textContent = message; el(id).dataset.state = state; }
 function setBusy(value: boolean) {
   busy = value;
-  document.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLSelectElement>('input, button, select').forEach(c => { c.disabled = value; });
-  el<HTMLButtonElement>('upload').disabled = value || !selected || !connected;
+  document.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLSelectElement>('input, button:not(#theme-toggle), select').forEach(c => { c.disabled = value; });
   el('workspace').setAttribute('aria-busy', String(value));
 }
 function mode(value: 'store' | 'retrieve') {
@@ -114,6 +124,7 @@ function clearRecovered() {
   el('download-result').hidden = true; el('result-empty').hidden = false;
   el<HTMLImageElement>('recovered').removeAttribute('src'); el('save').removeAttribute('href');
   el('inspection').replaceChildren(); el('inspection').hidden = true; status('inspection-status','');
+  el('view-entity').removeAttribute('href'); el('entity-links').hidden = true; el('entity-link-list').replaceChildren();
   if (recoveredUrl) URL.revokeObjectURL(recoveredUrl); recoveredUrl = undefined;
 }
 async function decode(bytes: Uint8Array, type: string) {
@@ -154,6 +165,7 @@ async function readImage(imageKey: Hex) {
     recoveredUrl = URL.createObjectURL(new Blob([new Uint8Array(result.bytes)],{type:result.contentType}));
     el<HTMLImageElement>('recovered').src = recoveredUrl;
     el<HTMLAnchorElement>('save').href = recoveredUrl; el<HTMLAnchorElement>('save').download = result.filename;
+    el<HTMLAnchorElement>('view-entity').href = entityUrl(imageKey);
     el('hash').textContent = result.sha256;
     el('read-summary').textContent = `${result.filename} \u00b7 ${result.byteLength.toLocaleString('en-US')} bytes \u00b7 ${result.width} \u00d7 ${result.height}`;
     el('result-expiration').textContent = 'Expiration estimate unavailable';
@@ -167,6 +179,19 @@ async function readImage(imageKey: Hex) {
     try {
       const inspection = await inspectImageEntities(client,imageKey,result);
       renderInspection(el('inspection'),inspection); el('inspection').hidden = false; status('inspection-status','');
+      if (inspection.manifest) {
+        const entries = [
+          { entity: inspection.root, label: 'Image entity' },
+          { entity: inspection.manifest, label: 'Manifest' },
+          ...inspection.chunks.map(chunk => ({ entity: chunk, label: `Chunk ${chunk.seq + 1}` })),
+        ];
+        el('entity-link-list').replaceChildren(...entries.map(({entity,label}) => {
+          const li = document.createElement('li'), link = document.createElement('a');
+          link.href = entityUrl(entity.key); link.textContent = `${label} \u2197`; link.title = entity.key;
+          link.target = '_blank'; link.rel = 'noopener noreferrer'; li.append(link); return li;
+        }));
+        el('entity-links').hidden = false;
+      }
     } catch {
       status('inspection-status','Image verified, but entity details could not be verified. Retrieve again to retry.','error');
     }
@@ -174,8 +199,8 @@ async function readImage(imageKey: Hex) {
 }
 el<HTMLFormElement>('upload-form').addEventListener('submit', async event => {
   event.preventDefault(); if (busy) return;
+  if (!connected) { status('upload-status','Connect your wallet above to store this image.','error'); el('connect').focus(); return; }
   if (!selected) { status('upload-status','Choose a valid image first.','error'); return; }
-  if (!connected) { status('upload-status','Connect your wallet above.','error'); return; }
   const original = selected, session = connected;
   setBusy(true); stored = undefined; el('upload-result').hidden = true; clearRecovered(); status('read-status','');
   let key: Hex | undefined;
@@ -187,7 +212,14 @@ el<HTMLFormElement>('upload-form').addEventListener('submit', async event => {
     const result = await storeImage({publicClient:client,walletClient:guardedWalletClient(session.provider,session.address,()=>connected !== session),bytes:original.bytes,filename:original.filename,expirationBlocks,onProgress:p=>status('upload-status',`Storing: ${p.completed}/${p.total} chunks. Check your wallet\u2026`,'loading')});
     stored = {key:result.imageKey,bytes:original.bytes,sha256:result.sha256}; key = result.imageKey;
     el<HTMLInputElement>('image-key').value = key; el('uploaded-key').textContent = key;
-    el('receipts').replaceChildren(...result.transactionHashes.map(hash => {const li=document.createElement('li');if(explorer){const link=document.createElement('a');link.textContent=hash;link.href=`${explorer}/tx/${hash}`;link.target='_blank';link.rel='noopener noreferrer';li.append(link);}else li.textContent=hash;return li;}));
+    el('receipts').replaceChildren(...result.transactionHashes.map(hash => {
+      const li = document.createElement('li');
+      try {
+        const link = document.createElement('a'); link.href = transactionUrl(hash); link.textContent = hash;
+        link.target = '_blank'; link.rel = 'noopener noreferrer'; li.append(link);
+      } catch { li.textContent = hash; }
+      return li;
+    }));
     el('upload-result').hidden = false; status('upload-status','Stored.','success');
   } catch(error) {
     let detail = message(error);

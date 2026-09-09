@@ -37,6 +37,14 @@ await page.goto(process.env.SAMPLE_URL??'http://127.0.0.1:3082');
 const packageVersion=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8')).version;
 await page.waitForFunction(version=>document.querySelector('#version')?.textContent===`v${version}`,packageVersion);
 assert.equal(await page.locator('html').getAttribute('lang'),'en');
+assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+assert.equal(await page.locator('#connect').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(254, 116, 70)');
+await page.locator('#theme-toggle').click();
+assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
+await page.reload();
+assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
+await page.screenshot({path:join(output,'empty-light-1440.png'),fullPage:true});
+await page.getByRole('button',{name:'Switch to dark mode'}).click();
 await page.waitForFunction(()=>document.querySelector('#wallet')?.options[0]?.text.includes('MetaMask'));
 await page.screenshot({path:join(output,'empty-1440.png'),fullPage:true});
 assert.equal(await page.locator('#download-result').isVisible(),false);
@@ -44,12 +52,17 @@ assert.equal(await page.locator('#rpc, #consent, #switch').count(),0);
 assert.equal(await page.locator('#expiration').getAttribute('type'),'datetime-local');
 assert.ok((await page.locator('#connect').boundingBox()).y < (await page.locator('h1').boundingBox()).y);
 await page.locator('#connect').focus();await page.keyboard.press('Tab');
+assert.equal(await page.evaluate(()=>document.activeElement.id),'theme-toggle');
+await page.keyboard.press('Tab');
 assert.equal(await page.evaluate(()=>document.activeElement.id),'store-tab');
 await page.keyboard.press('ArrowRight');
 assert.equal(await page.locator('#read-form').isVisible(),true);
 assert.match(await page.locator('#key-help').innerText(),/No wallet needed/);
 await page.keyboard.press('ArrowLeft');
 assert.equal(await page.locator('#upload-form').isVisible(),true);
+await page.locator('#upload').click();
+assert.match(await page.locator('#upload-status').innerText(),/Connect your wallet/);
+assert.equal(rpc.transactions.length,0);
 await page.locator('#file').setInputFiles({name:'bad.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg/>')});
 await page.waitForFunction(()=>document.querySelector('#file-info').dataset.state==='error');
 await page.locator('#file').setInputFiles({name:'large.png',mimeType:'image/png',buffer:Buffer.alloc(25*1024*1024+1)});
@@ -59,7 +72,7 @@ await page.waitForFunction(()=>document.querySelector('#connect').title.startsWi
 assert.ok(walletCalls.includes('wallet_switchEthereumChain'));
 const results=[];
 for(const fixture of [
-  {bytes:png(undefined,320,200),filename:'inline.png',mimeType:'image/png'},
+  {bytes:png(120000,320,200),filename:'inline.png',mimeType:'image/png'},
   {bytes:new Uint8Array(await readFile(new URL('./fixtures/public.jpg',import.meta.url))),filename:'public.jpg',mimeType:'image/jpeg'},
   {bytes:png(120001,320,200),filename:'chunked.png',mimeType:'image/png'},
 ]){
@@ -78,20 +91,36 @@ for(const fixture of [
   await page.waitForFunction(()=>!document.querySelector('#inspection').hidden);delay=0;
   assert.equal(await page.locator('#upload-status').innerText(),'Stored.');
   assert.equal(await page.locator('.attribute-table tbody tr').count(),filename==='chunked.png'?9:8);
+  assert.equal(await page.locator('#view-entity').getAttribute('href'),`https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/${await page.locator('#image-key').inputValue()}`);
   if(filename==='chunked.png'){
+    assert.equal(await page.locator('#entity-link-list a').count(),4);
     assert.match(await page.locator('.payload-preview').innerText(),/Empty payload/);
     await page.getByRole('button',{name:'Manifest Describes the file'}).click();
     assert.equal(await page.locator('.attribute-table tbody tr').count(),6);
     assert.match(await page.locator('.manifest-json').innerText(),/chunked.png/);
     await page.getByRole('button',{name:'Chunks 2 ordered payloads'}).click();
     assert.equal(await page.locator('#chunk-select option').count(),2);
+    const firstHex = await page.locator('.payload-preview code').textContent();
+    assert.deepEqual(Buffer.from(firstHex.replace(/\s/g,''),'hex'),Buffer.from(bytes.slice(0,100000)));
     await page.locator('#chunk-select').selectOption('1');
     assert.match(await page.locator('.byte-range').innerText(),/100,000.*120,000/);
     assert.equal(await page.locator('.attribute-table tbody tr').count(),3);
+    assert.match(await page.locator('.entity-explorer').getAttribute('href'),/^https:\/\/indexer\.tiramisu\.db-chain\.testnet\.arkiv\.network\/entity\/0x[\da-f]{64}$/);
     const disclosure=page.getByText('See the inspection query',{exact:true});
     await disclosure.focus();await page.keyboard.press('Enter');
     assert.match(await page.locator('.entity-detail details pre').innerText(),/ownedBy/);
     await page.keyboard.press('Enter');
+  }
+  const displayedHex = await page.locator('.payload-preview code').textContent();
+  const expectedPayload = filename==='chunked.png' ? bytes.slice(100000) : bytes;
+  assert.deepEqual(Buffer.from(displayedHex.replace(/\s/g,''),'hex'),Buffer.from(expectedPayload));
+  assert.equal(displayedHex.includes('\u2026'),false);
+  assert.equal(await page.locator('.payload-preview').getAttribute('tabindex'),'0');
+  if(filename==='chunked.png'){
+    const payload=page.locator('.payload-preview');
+    assert.equal(await payload.evaluate(e=>e.scrollHeight>e.clientHeight),true);
+    await payload.focus();await page.keyboard.press('Control+End');
+    await page.waitForFunction(()=>document.querySelector('.payload-preview').scrollTop>0);
   }
   assert.match(await page.locator('#read-status').innerText(),/byte for byte/);
   assert.equal(await page.locator('#recovered').evaluate(img=>img.complete&&img.naturalWidth===320),true);
@@ -105,6 +134,13 @@ for(const width of [390,599,600,601,768,899,900,901,1440]){
   assert.equal(metrics.overflow,false);assert.equal(metrics.loaded,true);
   await page.screenshot({path:join(output,`success-${width}.png`),fullPage:true});results.push({width,...metrics});
 }
+await page.locator('#theme-toggle').click();
+for(const width of [390,768,1440]){
+  await page.setViewportSize({width,height:1000});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await page.screenshot({path:join(output,`light-success-${width}.png`),fullPage:true});
+}
+await page.locator('#theme-toggle').click();
 await page.setViewportSize({width:1440,height:1000});
 await page.evaluate(()=>document.body.style.zoom='200%');
 assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);

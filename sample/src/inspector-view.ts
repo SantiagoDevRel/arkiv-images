@@ -1,4 +1,5 @@
 import type { ImageEntityInspection, InspectedEntity } from './inspection';
+import { entityUrl } from './explorer';
 
 const node = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, className?: string) => {
   const element = document.createElement(tag);
@@ -24,12 +25,18 @@ export function renderInspection(container: HTMLElement, report: ImageEntityInsp
   function show(entity: InspectedEntity, name: string, purpose: string, query: string, range?: string) {
     panel.replaceChildren(node('h3', name));
     const key = node('code', entity.key, 'entity-key');
-    panel.append(key, node('p', purpose, 'help'));
+    const link = node('a', 'View entity \u2197', 'entity-explorer');
+    link.href = entityUrl(entity.key); link.target = '_blank'; link.rel = 'noopener noreferrer';
+    link.setAttribute('aria-label', `View ${name.toLowerCase()} in block explorer`);
+    panel.append(key, link, node('p', purpose, 'help'));
     if (range) panel.append(node('p', range, 'byte-range'));
     const payloadTitle = node('h4', `Payload · ${number(entity.payload.length)} bytes`);
     const payload = node('pre', undefined, 'payload-preview');
+    payload.tabIndex = 0;
+    payload.setAttribute('role', 'region');
+    payload.setAttribute('aria-label', `Complete ${name.toLowerCase()} payload in hexadecimal`);
     const code = node('code', entity.payload.length
-      ? [...entity.payload.slice(0, 32)].map(v => v.toString(16).padStart(2, '0')).join(' ') + (entity.payload.length > 32 ? ' …' : '')
+      ? Array.from(entity.payload, v => v.toString(16).padStart(2, '0')).join(' ')
       : 'Empty payload');
     payload.append(code); panel.append(payloadTitle, payload);
     if (entity === report.manifest) panel.append(node('p', new TextDecoder().decode(entity.payload), 'manifest-json'));

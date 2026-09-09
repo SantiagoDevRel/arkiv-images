@@ -1,0 +1,120 @@
+{
+  "url": "https://arkiv-images-example.vercel.app",
+  "verifiedAt": "2026-09-09T05:18:25.326Z",
+  "package": "arkiv-images@0.1.1",
+  "privatePaths": [
+    {
+      "path": ".env",
+      "status": 404
+    },
+    {
+      "path": ".env.local",
+      "status": 404
+    },
+    {
+      "path": "keys.json",
+      "status": 404
+    },
+    {
+      "path": "config.json",
+      "status": 404
+    },
+    {
+      "path": "package.json",
+      "status": 404
+    },
+    {
+      "path": "package-lock.json",
+      "status": 404
+    },
+    {
+      "path": "src/main.ts",
+      "status": 404
+    },
+    {
+      "path": ".git/config",
+      "status": 404
+    },
+    {
+      "path": ".vercel/project.json",
+      "status": 404
+    },
+    {
+      "path": "private.pem",
+      "status": 404
+    }
+  ],
+  "assets": [
+    {
+      "path": "assets/index-pq98rlQu.js",
+      "exactLocalBuildMatch": true
+    },
+    {
+      "path": "assets/index-CWfdPA5G.css",
+      "exactLocalBuildMatch": true
+    },
+    {
+      "path": "assets/ccip-B86j4ERy.js",
+      "exactLocalBuildMatch": true
+    },
+    {
+      "path": "assets/arkiv-wordmark-white.svg",
+      "exactLocalBuildMatch": true
+    }
+  ],
+  "reads": [
+    {
+      "key": "0x21a2b016bbcc1c7195401ad1fb93ad857d42956ec6e77ec3f3c63a800ecfc312",
+      "size": 120000,
+      "byteExact": true,
+      "completePayloads": true,
+      "entityUrls": [
+        "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x21a2b016bbcc1c7195401ad1fb93ad857d42956ec6e77ec3f3c63a800ecfc312"
+      ]
+    },
+    {
+      "key": "0x85fb5d3f3a337e5cbb832c9a15afbcf5b9bb53ae2e8b62fd5fe13c0931543011",
+      "size": 120001,
+      "byteExact": true,
+      "completePayloads": true,
+      "entityUrls": [
+        "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x85fb5d3f3a337e5cbb832c9a15afbcf5b9bb53ae2e8b62fd5fe13c0931543011",
+        "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x89efaf067dedff4b33df6b4207330c88aeb912a4fd4ae1f391140dd0b68854af",
+        "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x6c2f8003db45921193bf077e9bb176cef3395ef03cca15762fed547671701bc8",
+        "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x485825a39147b4fab29cb537480b3efe017602da901fae3b3b75c1831c0b140e"
+      ]
+    }
+  ],
+  "viewports": [
+    {
+      "theme": "dark",
+      "width": 390,
+      "noOverflow": true
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "noOverflow": true
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "noOverflow": true
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "noOverflow": true
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "noOverflow": true
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "noOverflow": true
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+/*
+!/package.json
+!/package-lock.json
+!/tsconfig.json
+!/index.html
+!/vercel.json
+!/src
+!/src/**
+!/public
+!/public/**

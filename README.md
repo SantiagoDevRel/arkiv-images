@@ -175,7 +175,7 @@ All functions and TypeScript types are exported from `arkiv-images`. Do not impo
 
 The inline threshold leaves room for attributes and transaction framing. The commonly cited 131,072-byte payload ceiling is **not** an image budget: the complete transaction also has a size limit. [Verification](docs/verification.md) records actual encoded sizes and which boundaries were submitted on Tiramisu. JPEG/PNG are already compressed image formats; converting to PDF or base64 does not remove the storage constraint. A photo's size varies with dimensions, detail and encoding; the sample measures the selected file rather than guessing from megapixels.
 
-**No encryption, metadata stripping, resizing or recompression.** The tool preserves the exact original bytes, including EXIF/GPS, embedded thumbnails and names. Everyone with read access to the public network can retrieve them. The sample requires acknowledgement before uploading. Use synthetic/non-sensitive images. Expiration removes entities from current queries; it does **not** erase historical bytes or copies. This tool offers no read authorization and does not claim confidentiality.
+**No encryption, metadata stripping, resizing or recompression.** The tool preserves the exact original bytes, including EXIF/GPS, embedded thumbnails and names. Everyone with read access to the public network can retrieve them. Use synthetic/non-sensitive images. Expiration removes entities from current queries; it does **not** erase historical bytes or copies. This tool offers no read authorization and does not claim confidentiality.
 
 The package performs bounded container checks, not a complete PNG CRC/JPEG entropy decode, antivirus scan or content moderation. A file can pass header checks and still fail full decoding. JPEGs must end at their end-of-image marker; files with trailing padding are rejected even if some decoders accept them. Export such files as a standard JPEG before uploading. The sample calls `createImageBitmap` both before writes and after retrieval. Consumers rendering images must also handle decode failures. Never serve uploaded bytes as HTML or SVG, and never trust a filename as markup.
 
@@ -186,6 +186,8 @@ Parts receive relative expiration at their own creation. The manifest is older t
 No multi-transaction atomicity, automatic write retries/resume, deduplication, deletion or rollback. If the final image transaction fails, confirmed file entities remain: preserve `manifestKey` and receipts, inspect them, then decide whether to start a new upload. A timeout can follow a successful transaction; the returned list includes only confirmations observed by this call. Serialize writes from the same account. In browser integrations recheck account/network before **every** signing request; the sample provides the implementation.
 
 ## Troubleshooting
+
+`retrieveImage` can throw either `ImageStorageError` or the exported `ChunkingError`; chunk failures are not members of `ImageErrorCode`. Handle both classes and use their safe `code`/`message` fields. Do not log the raw error or `cause`, which can contain provider secrets.
 
 | Symptom | Resolution |
 |---|---|
@@ -204,6 +206,7 @@ No multi-transaction atomicity, automatic write retries/resume, deduplication, d
 
 ## Sample, agent guides and development
 
+- [Live sample](https://arkiv-images-example.vercel.app), consuming `arkiv-images@0.1.1` from npm. [Deployment verification](docs/sample-review-v3.md) distinguishes real Tiramisu reads from controlled wallet tests.
 - [Sample README](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/README.md): source checkout, localhost commands and visitor-wallet flow.
 - [Consumer AGENTS.md](AGENTS.md) and [sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/AGENTS.md). Give these guides to your agent explicitly. It will not necessarily read files under `node_modules` automatically. Each CLAUDE.md points to the corresponding AGENTS.md.
 - [Verification](docs/verification.md): exact runtimes, dependency versions, simulated vs real checks, publication and unresolved gates.

@@ -1,0 +1,94 @@
+{
+  "verifiedAt": "2026-09-09T04:55:21.915Z",
+  "package": "arkiv-images@0.1.1",
+  "byteExact": true,
+  "payloads": [
+    {
+      "chunk": 0,
+      "bytes": 100000,
+      "complete": true
+    },
+    {
+      "chunk": 1,
+      "bytes": 20001,
+      "complete": true
+    }
+  ],
+  "links": [
+    {
+      "url": "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x85fb5d3f3a337e5cbb832c9a15afbcf5b9bb53ae2e8b62fd5fe13c0931543011",
+      "key": "0x85fb5d3f3a337e5cbb832c9a15afbcf5b9bb53ae2e8b62fd5fe13c0931543011",
+      "label": "Image entity ↗"
+    },
+    {
+      "url": "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x89efaf067dedff4b33df6b4207330c88aeb912a4fd4ae1f391140dd0b68854af",
+      "key": "0x89efaf067dedff4b33df6b4207330c88aeb912a4fd4ae1f391140dd0b68854af",
+      "label": "Manifest ↗"
+    },
+    {
+      "url": "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x6c2f8003db45921193bf077e9bb176cef3395ef03cca15762fed547671701bc8",
+      "key": "0x6c2f8003db45921193bf077e9bb176cef3395ef03cca15762fed547671701bc8",
+      "label": "Chunk 1 ↗"
+    },
+    {
+      "url": "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x485825a39147b4fab29cb537480b3efe017602da901fae3b3b75c1831c0b140e",
+      "key": "0x485825a39147b4fab29cb537480b3efe017602da901fae3b3b75c1831c0b140e",
+      "label": "Chunk 2 ↗"
+    }
+  ],
+  "explorer": [
+    {
+      "url": "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x85fb5d3f3a337e5cbb832c9a15afbcf5b9bb53ae2e8b62fd5fe13c0931543011",
+      "key": "0x85fb5d3f3a337e5cbb832c9a15afbcf5b9bb53ae2e8b62fd5fe13c0931543011",
+      "correct": true
+    },
+    {
+      "url": "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x89efaf067dedff4b33df6b4207330c88aeb912a4fd4ae1f391140dd0b68854af",
+      "key": "0x89efaf067dedff4b33df6b4207330c88aeb912a4fd4ae1f391140dd0b68854af",
+      "correct": true
+    },
+    {
+      "url": "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x6c2f8003db45921193bf077e9bb176cef3395ef03cca15762fed547671701bc8",
+      "key": "0x6c2f8003db45921193bf077e9bb176cef3395ef03cca15762fed547671701bc8",
+      "correct": true
+    },
+    {
+      "url": "https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/0x485825a39147b4fab29cb537480b3efe017602da901fae3b3b75c1831c0b140e",
+      "key": "0x485825a39147b4fab29cb537480b3efe017602da901fae3b3b75c1831c0b140e",
+      "correct": true
+    }
+  ],
+  "performance": [
+    {
+      "bytes": 120000,
+      "renderAndLayoutMs": 64.79999995231628,
+      "scrollHeight": 61495,
+      "visibleHeight": 260
+    },
+    {
+      "bytes": 100000,
+      "renderAndLayoutMs": 48.90000009536743,
+      "scrollHeight": 51268,
+      "visibleHeight": 260
+    }
+  ],
+  "checkedWidths": {
+    "dark": [
+      390,
+      599,
+      600,
+      601,
+      768,
+      899,
+      900,
+      901,
+      1440
+    ],
+    "light": [
+      390,
+      768,
+      1440
+    ]
+  },
+  "nativeZoom": 2
+}
