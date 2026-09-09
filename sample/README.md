@@ -4,9 +4,11 @@ A minimal browser dapp: choose a public PNG/JPEG, connect your wallet on Tiramis
 
 **These packages are intended for testnet use.**
 
+[Open the live sample](https://arkiv-images-example.vercel.app). The deployed JavaScript and CSS match the verified local build; see [deployment evidence](../docs/sample-review-v3.md).
+
 ## Clean checkout
 
-Node **22.12+** and npm; tested Node **22.22.3**. Dependencies: `arkiv-images@0.1.1`, SDK `0.8.0`, viem `2.56.3`; build tooling TypeScript `5.9.3`, Vite `8.2.2`. The page displays the version exported by the installed library.
+Node **22.12+** and npm; tested Node **22.22.3** on Windows and a clean install/build with Node **24.20.0**, npm **11.19.0** on Linux. Dependencies: `arkiv-images@0.1.1`, SDK `0.8.0`, viem `2.56.3`; build tooling TypeScript `5.9.3`, Vite `8.2.2`. The page displays the version exported by the installed library.
 
 ```sh
 git clone --branch feat/image-storage https://github.com/SantiagoDevRel/arkiv-images.git
@@ -40,6 +42,8 @@ Errors stay visible in the affected step. Missing/expired entities, missing/corr
 On Windows, stop this sample's dev server before running `npm ci` again. Otherwise its native build binding can be locked and npm may report `EPERM`. Do not terminate unrelated processes.
 
 ## Agents and verification
+
+To deploy your own copy, run `npx vercel login`, then `npx vercel deploy --prod` from `sample/` and select your own account/project. The included `vercel.json` uses `npm ci`, `npm run build` and `dist`; `.vercelignore` allows only build inputs. No environment variables or wallet credentials are required. Keep the complete lockfile: removing optional platform bindings can make Linux `npm ci` fail even when Windows builds pass.
 
 Give your agent [sample AGENTS.md](AGENTS.md) and the [package AGENTS.md](../AGENTS.md) explicitly, together with the desired integration objective. CLAUDE.md points to the sample guide. Instructions are not automatically discovered from installed dependencies.
 

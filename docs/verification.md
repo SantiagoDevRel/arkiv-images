@@ -1,8 +1,8 @@
 # Verification: arkiv-images 0.1.1
 
-Latest sample revision: [dark/light themes, full payloads, explorer links and independent reviews](sample-review-v3.md). That report supersedes the older fixed-light-theme interface description below; the published package implementation is unchanged.
+Latest sample revision: [dark/light themes, full payloads, explorer links, deployment and independent reviews](sample-review-v3.md). The sample is now live at https://arkiv-images-example.vercel.app. That report supersedes the historical interface and undeployed-status descriptions below; the published package implementation is unchanged.
 
-## Current sample revision: calendar and entity inspector
+## Previous sample revision: calendar and entity inspector
 
 The current sample replaces the earlier settings/consent interface described in the historical sections below. It consumes the unchanged published `arkiv-images@0.1.1`; the sample itself is source code, not a new npm release or a deployed demo.
 

@@ -17,8 +17,18 @@ The library remains the published **arkiv-images 0.1.1**, using **arkiv-chunking
 |---|---|
 | Muse | Static adversarial review of image source/built output and the complete installed chunking implementation. No evidenced High/Critical finding. It could not run its dynamic probes: its isolated runtime was Node 20 and npm cache access failed. The implementing agent's Node 22 tests are separate evidence. |
 | Claude | Reviewed package/dependency and new sample source, ran all 29 tests, inspected four rendered screenshots, and checked explorer routes in the live SPA bundle. No blocking defect. Its two follow-ups were complete-payload coverage at 100,000/120,000 bytes and validation of transaction links; both were implemented and verified. |
-| Grok | CLI failed before review with an out-of-usage error. Grok web was also tried, including the available anonymous mode; it required sign-in before returning an answer. No Grok audit is claimed until access is available. |
+| Grok | Native Grok Build 4.6 completed the independent audit after the Cursor lane hit quota and web required login. Verified registry tarballs/integrity, installed runtime exports and guides; ran all 13 compiled package tests and malformed-input probes. No runtime blocker demonstrated. It did not inspect the sample UI or send real-network transactions. |
 
 Muse noted the documented container-only validation and strict JPEG ending rule, and that chunked root payload data is ignored by package retrieval. These were not demonstrated integrity bypasses. The browser still decodes supported raster data, and the inspector separately checks the exact entity schema/payloads.
+
+Grok confirmed the documented filename, decoding, mutable-manifest availability and raw-error limitations. The README now explicitly distinguishes `ChunkingError` from `ImageStorageError`. It also identified obsolete production-Hub links in the installed chunking guide; the image README already uses Tiramisu staging links. Neither npm release has Sigstore provenance; exact versions, lockfile integrity and registry tarball hashes were checked. Trusted publishing is a separate follow-up, not configured by this task. The installed image archive's historical verification heading is explained in the release report; current evidence lives in this repository.
+
+## Public deployment
+
+Verified **2026-09-09**: https://arkiv-images-example.vercel.app, deployment `dpl_J6ebWP1BqdZX5SAxU54Ug8qhZqXT`. The sample consumes published `arkiv-images@0.1.1`; no new library release was needed for UI changes.
+
+The first Vercel build exposed missing Linux optional packages in the Windows lockfile. The same `npm ci` failure was reproduced in Linux, then the lockfile was regenerated without changing existing dependency versions. A clean Linux install/build passed with **Node 24.20.0 / npm 11.19.0**, followed by a successful Vercel build. No Vercel resource was deleted.
+
+The public JavaScript, CSS and official SVG match the local build byte for byte. The full controlled browser regression passed against the deployed URL: three roundtrips, nine widths and native 200% zoom. Separately, anonymous real Tiramisu reads downloaded the 120,000-byte inline and 120,001-byte chunked images byte for byte, verified every displayed payload and all entity URLs, and rendered both themes at 390/768/1440. Ten sensitive/source paths returned 404. [Machine-readable evidence](sample-v3-deployment.json) records exact URLs, assets and checks.
 
 These are bounded reviews and reproducible checks, not a guarantee of absolute safety. Live maximum-size uploads, real MetaMask signing, physical mobile wallets and other browser engines remain unverified. The existing Rabby/Tiramisu receipt evidence is linked from [verification](verification.md).
