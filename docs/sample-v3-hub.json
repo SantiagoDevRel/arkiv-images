@@ -1,0 +1,105 @@
+{
+  "at": "2026-09-09T05:37:46.848Z",
+  "url": "https://stage.hub.arkiv.network/tools#tool-arkiv-chunking",
+  "version": {
+    "commit": "5bdaf2e559b9d4a3511d98aa136e9a2c45a72cc9",
+    "shortCommit": "5bdaf2e",
+    "ref": "develop",
+    "builtAt": "2026-09-09T05:34:42Z",
+    "deployEnv": "staging"
+  },
+  "layouts": [
+    {
+      "theme": "dark",
+      "width": 390,
+      "expanded": false,
+      "noOverflow": true
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "expanded": true,
+      "noOverflow": true
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "expanded": false,
+      "noOverflow": true
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "expanded": true,
+      "noOverflow": true
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "expanded": false,
+      "noOverflow": true
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "expanded": true,
+      "noOverflow": true
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "expanded": false,
+      "noOverflow": true
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "expanded": true,
+      "noOverflow": true
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "expanded": false,
+      "noOverflow": true
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "expanded": true,
+      "noOverflow": true
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "expanded": false,
+      "noOverflow": true
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "expanded": true,
+      "noOverflow": true
+    }
+  ],
+  "links": [
+    {
+      "name": "Try sample dapp",
+      "url": "https://arkiv-chunking-sample.vercel.app"
+    },
+    {
+      "name": "Sample source",
+      "url": "https://github.com/SantiagoDevRel/arkiv-chunking/tree/feat/file-chunking/sample"
+    },
+    {
+      "name": "Documentation",
+      "url": "https://github.com/SantiagoDevRel/arkiv-chunking/blob/feat/file-chunking/README.md"
+    },
+    {
+      "name": "View on npm",
+      "url": "https://www.npmjs.com/package/arkiv-chunking/v/0.1.0"
+    }
+  ],
+  "clipboard": "npm install arkiv-chunking@0.1.0",
+  "openedSample": "https://arkiv-chunking-sample.vercel.app/"
+}
