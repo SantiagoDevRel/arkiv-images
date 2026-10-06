@@ -1,6 +1,6 @@
 {
   "name": "arkiv-images",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Store public PNG and JPEG images as Arkiv entities and retrieve verified original bytes.",
   "type": "module",
   "exports": {
@@ -17,7 +17,8 @@
     "CLAUDE.md",
     "LICENSE",
     "docs/verification.md",
-    "docs/testnet-evidence.json"
+    "docs/testnet-evidence.json",
+    "docs/sdk-0.8.1-evidence.json"
   ],
   "sideEffects": false,
   "engines": {
@@ -36,14 +37,14 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "arkiv-chunking": "0.1.0"
+    "arkiv-chunking": "0.1.1"
   },
   "peerDependencies": {
-    "@arkiv-network/sdk": "0.8.0",
+    "@arkiv-network/sdk": ">=0.8.1 <0.9",
     "viem": "^2.56.3"
   },
   "devDependencies": {
-    "@arkiv-network/sdk": "0.8.0",
+    "@arkiv-network/sdk": "0.8.1",
     "@types/node": "22.19.13",
     "playwright": "1.62.1",
     "typescript": "5.9.3",

@@ -1,4 +1,16 @@
-# Verification: arkiv-images 0.1.1
+# Verification: arkiv-images
+
+## SDK 0.8.1 candidate — 2026-10-06
+
+The unpublished **0.1.2** candidate uses SDK **0.8.1**, viem **2.56.3**, the **arkiv-chunking 0.1.1** candidate and Node **22.22.3**. Typecheck and all 29 existing tests passed against these dependencies, including exact-byte PNG/JPEG retrieval and a 25 MiB image across the 200-entity page boundary. RPC storage and wallet responses were controlled fixtures, not funded writes.
+
+Three new tests reproduced malformed wallet chain IDs passing the package preflight: a decimal string, number or array was coerced to the expected ID. The guard now requires a hexadecimal string and rejects each before any transaction. These tests use actual SDK clients with a controlled provider.
+
+The shared SDK 0.8.1 Tiramisu suite passed **12/12 cases with 40 confirmed transactions in total across chunking and images** on 2026-10-06. Four synthetic PNG/JPEG rasters completed inline/chunked store and exact-byte retrieval, then decoded before and after readback in Chrome **154.0.8037.58**. The shared suite also covered the 120,001-byte/empty file roundtrips and 201-part, two-page retrieval. The executed 0.1.2 images and 0.1.1 chunking modules match the locally packed candidates. [Sanitized cases, digests, dimensions and confirmed receipts](sdk-0.8.1-evidence.json).
+
+Local validations and controlled corruption/post-receipt SDK-result-loss cases are labeled separately; no deployed app, extension-wallet signing, actual expiry or full durable upload continuation is certified here. The SDK peer is `>=0.8.1 <0.9`; other versions in that range are untested. Publish and verify chunking 0.1.1 before releasing images; local tarball tests do not prove registry availability. The current npm release remains 0.1.1. The historical sections below keep their original versions and network evidence.
+
+## Historical 0.1.1 verification
 
 Latest sample revision: [dark/light themes, full payloads, explorer links, deployment and independent reviews](sample-review-v3.md). The sample is now live at https://arkiv-images-example.vercel.app. That report supersedes the historical interface and undeployed-status descriptions below; the published package implementation is unchanged.
 

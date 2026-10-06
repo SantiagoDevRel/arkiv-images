@@ -4,7 +4,7 @@ import { eq } from '@arkiv-network/sdk/query';
 import { uploadFile, downloadFile, hashFile, ChunkingError, DEFAULT_CHUNK_BYTES, type ChunkingPublicClient, type ChunkingWalletClient, type Progress } from 'arkiv-chunking';
 import type { Hex } from 'viem';
 
-export const VERSION = '0.1.1';
+export const VERSION = '0.1.2';
 export const IMAGE_TYPE = 'arkiv-images/v1';
 export const INLINE_MAX_BYTES = 120_000;
 export const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
@@ -93,7 +93,10 @@ function filenameValid(filename: unknown): asserts filename is string {
 }
 async function checkNetwork(client: ChunkingPublicClient, wallet?: ChunkingWalletClient) {
   if (!client.chain?.testnet || await client.getChainId() !== client.chain.id) fail('NETWORK_MISMATCH', 'Configure an explicit testnet matching the RPC.');
-  if (wallet && (!wallet.account || !wallet.chain?.testnet || wallet.chain.id !== client.chain.id || Number(await wallet.transport.request({ method: 'eth_chainId' })) !== client.chain.id)) fail('NETWORK_MISMATCH', 'The wallet and RPC must use the same explicit testnet.');
+  if (!wallet) return;
+  if (!wallet.account || !wallet.chain?.testnet || wallet.chain.id !== client.chain.id) fail('NETWORK_MISMATCH', 'The wallet and RPC must use the same explicit testnet.');
+  const walletChainId = await wallet.transport.request({ method: 'eth_chainId' });
+  if (typeof walletChainId !== 'string' || !/^0x[0-9a-f]+$/i.test(walletChainId) || Number(BigInt(walletChainId)) !== client.chain.id) fail('NETWORK_MISMATCH', 'The wallet and RPC must use the same explicit testnet.');
 }
 
 /** Preserve original file bytes. All bytes, metadata and wallet addresses are public. Never retries writes. */
