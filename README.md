@@ -4,18 +4,20 @@ Store a public PNG or JPEG as queryable Arkiv entities, then retrieve and displa
 
 **These packages are intended for testnet use.**
 
-Version **0.1.1**. See [verification](docs/verification.md) for release evidence and [the npm registry](https://www.npmjs.com/package/arkiv-images/v/0.1.1) for availability. A locally packed artifact is not a published release.
+Version **0.1.2** adds SDK **0.8.1** support and depends on `arkiv-chunking` **0.1.1**. The immutable [0.1.1 archive](https://www.npmjs.com/package/arkiv-images/v/0.1.1) uses SDK 0.8.0 and chunking 0.1.0. Check both registry versions before installing; see [verification](docs/verification.md) for source checks and dated evidence.
 
 ## Install and inspect an image
 
-ESM, Node **22.10+** with Web Crypto, or a current browser on HTTPS/localhost. The tested dependency combination is SDK **0.8.0**, viem **2.56.3**, `arkiv-chunking` **0.1.0**, Node **22.22.3**. SDK 0.7 and older are incompatible. Other SDK versions, runtimes and networks are not claimed tested; see the evidence matrix below.
+ESM, Node **22.10+** with Web Crypto, or a current browser on HTTPS/localhost. The candidate is tested with SDK **0.8.1**, viem **2.56.3**, `arkiv-chunking` **0.1.1**, Node **22.22.3**. Its SDK peer range is `>=0.8.1 <0.9`; other releases in that range and other runtimes are untested.
+
+Build and pack the chunking candidate first, then this package. Install both resulting tarballs in a clean consumer:
 
 ```sh
 mkdir image-consumer
 cd image-consumer
 npm init -y
 npm pkg set type=module
-npm install --save-exact arkiv-images@0.1.1 @arkiv-network/sdk@0.8.0 viem@2.56.3
+npm install --save-exact /absolute/path/to/arkiv-chunking-0.1.1.tgz /absolute/path/to/arkiv-images-0.1.2.tgz @arkiv-network/sdk@0.8.1 viem@2.56.3
 ```
 
 Create `inspect.mjs`:
