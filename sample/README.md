@@ -31,6 +31,8 @@ Open **http://127.0.0.1:3082**. No `.env`, private key, server signer or API int
 
 The SDK's default Tiramisu RPC is internal to this sample; there is no RPC input or access-key field. Developers building another consumer can configure clients as described in the package README.
 
+To share an existing image, append `?image=<image-key>` to the sample URL. A valid `0x` key with 64 hexadecimal characters opens **Retrieve** and retrieves the image automatically without a wallet or transaction.
+
 Dark mode is the default. The sun/moon button at the top right switches themes and remembers the choice in this browser. If storage is unavailable, switching still works for the current page. **Store & verify** without a wallet displays **Connect your wallet above to store this image.** and focuses the orange connection button; it sends no transaction.
 
 Images above **120,000 bytes** automatically use the package's chunked path, up to the documented 25 MiB limit. For example, 120,001 bytes become two chunks (100,000 + 20,001 bytes), a file manifest and an image entity: **four entities, five wallet confirmations**, because the manifest is finalized in an additional transaction. Retrieval queries those parts, orders them by `seq`, joins the original bytes and verifies SHA-256 before rendering. Each payload box shows one complete entity's bytes; the image is assembled by the published package.

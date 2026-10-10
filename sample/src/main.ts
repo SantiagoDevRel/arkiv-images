@@ -235,3 +235,10 @@ el<HTMLFormElement>('read-form').addEventListener('submit',async event=>{
 });
 window.addEventListener('pagehide',()=>{detachWallet?.();if(originalUrl)URL.revokeObjectURL(originalUrl);if(recoveredUrl)URL.revokeObjectURL(recoveredUrl);});
 mode('store'); setBusy(false);
+const linkedImage = new URLSearchParams(window.location.search).get('image');
+if (linkedImage && /^0x[0-9a-fA-F]{64}$/.test(linkedImage)) {
+  mode('retrieve');
+  el<HTMLInputElement>('image-key').value = linkedImage;
+  setBusy(true);
+  void readImage(linkedImage as Hex).finally(() => setBusy(false));
+}
