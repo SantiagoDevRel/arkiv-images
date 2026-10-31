@@ -1,5 +1,7 @@
 # Hub integration handoff — issue #98
 
+> Historical handoff from before the SDK 1.0 / Rabdi migration. The versions, network and deployment steps below are preserved as context, not current instructions. Follow [README](../README.md) and [candidate verification](verification.md) for the current API and sample; Hub integration still requires its own authorized task.
+
 Package and sample source: https://github.com/SantiagoDevRel/arkiv-images
 Canonical npm: https://www.npmjs.com/package/arkiv-images/v/0.1.1
 Sample setup: https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/README.md

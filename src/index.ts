@@ -1,36 +1,84 @@
-import { ExpirationTime } from '@arkiv-network/sdk';
-import { bytes32, key, str, u64 } from '@arkiv-network/sdk/attr';
+import { ExpirationTime, randomSalt } from '@arkiv-network/sdk';
+import { bytes as binary, defineSchema, key, str, u64, type Column, type Schema, type TypeTag } from '@arkiv-network/sdk/schema';
 import { eq } from '@arkiv-network/sdk/query';
-import { uploadFile, downloadFile, hashFile, ChunkingError, DEFAULT_CHUNK_BYTES, type ChunkingPublicClient, type ChunkingWalletClient, type Progress } from 'arkiv-chunking';
-import type { Hex } from 'viem';
+import { uploadFile, downloadFile, hashFile, ChunkingError, DEFAULT_CHUNK_BYTES, MAX_EXPIRATION_BLOCKS, writeWithPolicy, WriteConfirmationPendingError, type TransactionParameterPolicy, type WriteTransactionParameters, type ChunkingPublicClient, type ChunkingWalletClient, type Progress } from 'arkiv-chunking';
+import { hexToBytes, type Hex } from 'viem';
 
-export const VERSION = '0.1.2';
-export const IMAGE_TYPE = 'arkiv-images/v1';
+export const VERSION = '1.0.0';
+export const IMAGE_TYPE = 'arkiv-images/v2';
+type Stored<T extends TypeTag> = Column<T, false, false, false>;
+type Indexed<T extends TypeTag> = Column<T, true, false, false>;
+export const ImageSchema: Schema<{
+  type: Indexed<'str'>; mode: Indexed<'str'>; mime: Indexed<'str'>; sha256: Indexed<'str'>;
+  filename: Stored<'str'>; size: Stored<'u64'>; width: Stored<'u64'>; height: Stored<'u64'>;
+  manifest: Column<'key', true, true, false>; data: Stored<'bytes'>;
+}> = defineSchema(IMAGE_TYPE, {
+  type: str().indexed(), mode: str().indexed(), mime: str().indexed(), sha256: str().indexed(),
+  filename: str(), size: u64(), width: u64(), height: u64(), manifest: key().indexed().optional(), data: binary(),
+});
+export { MAX_EXPIRATION_BLOCKS, RABDI_MAX_LIFETIME_BLOCKS, EXPIRATION_INCLUSION_MARGIN_BLOCKS } from 'arkiv-chunking';
 export const INLINE_MAX_BYTES = 120_000;
 export const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 export const MAX_IMAGE_PIXELS = 40_000_000;
 export type ImageContentType = 'image/png' | 'image/jpeg';
-export type ImageErrorCode = 'INVALID_IMAGE' | 'TOO_LARGE' | 'INVALID_INPUT' | 'NETWORK_MISMATCH' | 'NOT_FOUND' | 'INVALID_ENTITY' | 'HASH_MISMATCH' | 'UPLOAD_FAILED' | 'READ_FAILED';
+export type ImageErrorCode = 'INVALID_IMAGE' | 'TOO_LARGE' | 'INVALID_INPUT' | 'NETWORK_MISMATCH' | 'NOT_FOUND' | 'INVALID_ENTITY' | 'HASH_MISMATCH' | 'UPLOAD_FAILED' | 'CONFIRMATION_PENDING' | 'READ_FAILED';
 export class ImageStorageError extends Error {
   readonly code: ImageErrorCode;
   readonly manifestKey?: Hex;
+  readonly imageKey?: Hex;
   readonly transactionHashes: readonly Hex[];
-  constructor(code: ImageErrorCode, message: string, options: { cause?: unknown; manifestKey?: Hex; transactionHashes?: readonly Hex[] } = {}) {
+  constructor(code: ImageErrorCode, message: string, options: { cause?: unknown; manifestKey?: Hex; imageKey?: Hex; transactionHashes?: readonly Hex[] } = {}) {
     super(message, { cause: options.cause }); this.name = 'ImageStorageError'; this.code = code;
-    this.manifestKey = options.manifestKey; this.transactionHashes = [...(options.transactionHashes ?? [])];
+    this.manifestKey = options.manifestKey; this.imageKey = options.imageKey; this.transactionHashes = [...(options.transactionHashes ?? [])];
   }
 }
 export { ChunkingError } from 'arkiv-chunking';
-export type { Progress } from 'arkiv-chunking';
+export type { Progress, TransactionParameterPolicy } from 'arkiv-chunking';
 export interface ImageInfo { contentType: ImageContentType; width: number; height: number; byteLength: number }
 export interface ImagePlan { mode: 'inline' | 'chunked'; bytes: number; chunkCount: number; entityCount: number; transactionCount: number }
 export interface StoreImageOptions {
   publicClient: ChunkingPublicClient; walletClient: ChunkingWalletClient;
   bytes: Uint8Array; filename: string; contentType?: ImageContentType; expirationBlocks: number;
   onProgress?: (progress: Progress) => void | Promise<void>;
+  /** Reuses the chunking write policy for every part and the image root. */
+  txParams?: TransactionParameterPolicy;
 }
 export interface StoredImage extends ImageInfo {
   imageKey: Hex; manifestKey?: Hex; sha256: Hex; mode: 'inline' | 'chunked'; transactionHashes: Hex[];
+}
+export type ImageWriteState = 'ready' | 'sending' | 'submitted' | 'complete' | 'uncertain' | 'failed';
+export interface ImageWriteOperation {
+  readonly state: ImageWriteState;
+  readonly imageKey?: Hex;
+  readonly transactionHashes: readonly Hex[];
+  /** Repeated calls share one operation, including a rejected or pending result. */
+  run(): Promise<StoredImage>;
+}
+/** Keep this object across UI renders/clicks. A new operation is an explicit new upload. */
+export function createImageWriteOperation(options: StoreImageOptions | (() => Promise<StoreImageOptions>)): ImageWriteOperation {
+  let state: ImageWriteState = 'ready', promise: Promise<StoredImage> | undefined, imageKey: Hex | undefined;
+  let hashes: readonly Hex[] = [];
+  const snapshot = typeof options === 'function' ? options : { ...options, bytes: options.bytes instanceof Uint8Array ? new Uint8Array(options.bytes) : options.bytes };
+  return {
+    get state() { return state; }, get imageKey() { return imageKey; }, get transactionHashes() { return [...hashes]; },
+    run() {
+      if (promise) return promise;
+      state = 'sending';
+      // Store the promise before the first network call, including synchronous provider callbacks.
+      promise = Promise.resolve().then(async () => executeStoreImage(typeof snapshot === 'function' ? await snapshot() : snapshot, (key, txHashes) => {
+        state = 'submitted'; imageKey = key; hashes = [...txHashes];
+      }, txHashes => { hashes = [...txHashes]; })).then(result => {
+        state = 'complete'; imageKey = result.imageKey; hashes = [...result.transactionHashes]; return result;
+      }, error => {
+        if (error instanceof ImageStorageError) {
+          imageKey = error.imageKey ?? imageKey; hashes = [...error.transactionHashes];
+          state = error.code === 'CONFIRMATION_PENDING' ? 'submitted' : error.code === 'INVALID_INPUT' || error.code === 'NETWORK_MISMATCH' ? 'failed' : 'uncertain';
+        } else state = 'uncertain';
+        throw error;
+      });
+      return promise;
+    },
+  };
 }
 export interface RetrieveImageOptions { publicClient: ChunkingPublicClient; imageKey: Hex; expectedSha256?: Hex; onProgress?: StoreImageOptions['onProgress'] }
 export interface RetrievedImage extends ImageInfo { bytes: Uint8Array; filename: string; sha256: Hex; mode: 'inline' | 'chunked'; expiresAt: bigint }
@@ -92,41 +140,85 @@ function filenameValid(filename: unknown): asserts filename is string {
   if (typeof filename !== 'string' || !filename || new TextEncoder().encode(filename).length > 128 || /[\x00-\x1f\x7f/\\]/.test(filename) || filename === '.' || filename === '..') fail('INVALID_INPUT', 'Use a basename of 1–128 UTF-8 bytes, without control characters.');
 }
 async function checkNetwork(client: ChunkingPublicClient, wallet?: ChunkingWalletClient) {
-  if (!client.chain?.testnet || await client.getChainId() !== client.chain.id) fail('NETWORK_MISMATCH', 'Configure an explicit testnet matching the RPC.');
+  if (!client.chain?.testnet || client.chain.id !== 7794095 || await client.getChainId() !== client.chain.id) fail('NETWORK_MISMATCH', 'Configure Rabdi testnet matching the RPC.');
   if (!wallet) return;
   if (!wallet.account || !wallet.chain?.testnet || wallet.chain.id !== client.chain.id) fail('NETWORK_MISMATCH', 'The wallet and RPC must use the same explicit testnet.');
   const walletChainId = await wallet.transport.request({ method: 'eth_chainId' });
   if (typeof walletChainId !== 'string' || !/^0x[0-9a-f]+$/i.test(walletChainId) || Number(BigInt(walletChainId)) !== client.chain.id) fail('NETWORK_MISMATCH', 'The wallet and RPC must use the same explicit testnet.');
 }
 
-/** Preserve original file bytes. All bytes, metadata and wallet addresses are public. Never retries writes. */
+/** Preserve original public file bytes. Only the shared policy's confirmed-revert retry is allowed. */
 export async function storeImage(options: StoreImageOptions): Promise<StoredImage> {
+  return createImageWriteOperation(options).run();
+}
+async function executeStoreImage(options: StoreImageOptions, submitted: (key: Hex, hashes: readonly Hex[]) => void, observed: (hashes: readonly Hex[]) => void): Promise<StoredImage> {
   const { publicClient, walletClient, filename, expirationBlocks, onProgress } = options;
   filenameValid(filename);
   const info = inspectImage(options.bytes, options.contentType), plan = planImage(info.byteLength);
-  if (!Number.isSafeInteger(expirationBlocks) || expirationBlocks < Math.max(64, plan.transactionCount + 32) || expirationBlocks > 15_768_000) fail('INVALID_INPUT', 'Choose a whole-block expiration from max(64, transactionCount + 32) to 15768000.');
+  if (!Number.isSafeInteger(expirationBlocks) || expirationBlocks < Math.max(64, plan.transactionCount + 32) || expirationBlocks > MAX_EXPIRATION_BLOCKS) fail('INVALID_INPUT', `Choose a whole-block expiration from max(64, transactionCount + 32) to ${MAX_EXPIRATION_BLOCKS}. Longer storage needs coordinated Lifetime Extension outside this API.`);
   const bytes = new Uint8Array(options.bytes);
   let manifestKey: Hex | undefined;
+  let imageKey: Hex | undefined;
   const transactionHashes: Hex[] = [];
+  const rememberHash = (hash: Hex) => {
+    if (!transactionHashes.includes(hash)) { transactionHashes.push(hash); observed(transactionHashes); }
+  };
+  // Observe the public SDK mutation boundary before the shared policy can query a receipt.
+  // EntityMutationError.txHash survives even when that lookup fails and hides the SDK error.
+  // This only retains evidence; the dependency still owns gas, receipt handling and retries.
+  const observeMutation = async <T extends { txHash: Hex }>(mutate: () => Promise<T>): Promise<T> => {
+    try { const result = await mutate(); rememberHash(result.txHash); return result; }
+    catch (error) {
+      const hash = error && typeof error === 'object' && 'txHash' in error ? error.txHash : undefined;
+      if (hex32(hash)) rememberHash(hash);
+      throw error;
+    }
+  };
+  const observedWallet: ChunkingWalletClient = {
+    ...walletClient,
+    createEntity: (...args) => observeMutation(() => walletClient.createEntity(...args)),
+    patchEntity: (...args) => observeMutation(() => walletClient.patchEntity(...args)),
+  };
   try {
     await checkNetwork(publicClient, walletClient);
+    let expiresAt = BigInt(await walletClient.transport.request({ method: 'eth_blockNumber' }) as Hex) + BigInt(expirationBlocks);
+    // The dependency owns estimates, latest nonce, gas headroom, receipts and bounded retries.
+    // Add the migration's stricter half-block ceiling and per-signature identity checks here.
+    const txParams: TransactionParameterPolicy = async context => {
+      await checkNetwork(publicClient, walletClient);
+      if (walletClient.account?.type === 'json-rpc') {
+        const accounts = await walletClient.transport.request({ method: 'eth_accounts' }) as Hex[];
+        if (accounts[0]?.toLowerCase() !== walletClient.account.address.toLowerCase()) fail('NETWORK_MISMATCH', 'The wallet account changed. Inspect confirmed writes before reconnecting.');
+      }
+      const override = await options.txParams?.(context) ?? {};
+      const block = await walletClient.transport.request({ method: 'eth_getBlockByNumber', params: ['latest', false] }) as { gasLimit: Hex };
+      if ((override.gas ?? context.defaults.gas) > BigInt(block.gasLimit) / 2n) fail('INVALID_INPUT', 'The transaction exceeds half the latest block gas limit. Use a smaller image or a shorter Entity Expiration; no write was submitted for this part.');
+      return override;
+    };
     const sha256 = await hashFile(bytes);
     if (plan.mode === 'chunked') {
-      const stored = await uploadFile({ publicClient, walletClient, bytes, filename, contentType: info.contentType, expirationBlocks, onProgress });
-      manifestKey = stored.manifestKey; transactionHashes.push(...stored.transactionHashes);
+      const stored = await uploadFile({ publicClient, walletClient: observedWallet, bytes, filename, contentType: info.contentType, expirationBlocks, onProgress, txParams });
+      manifestKey = stored.manifestKey; stored.transactionHashes.forEach(rememberHash);
+      expiresAt = stored.expiresAt;
     }
     await checkNetwork(publicClient, walletClient);
-    const attributes = { type: str(IMAGE_TYPE), mode: str(plan.mode), mime: str(info.contentType), filename: str(filename), sha256: bytes32(sha256), size: u64(bytes.length), width: u64(info.width), height: u64(info.height), ...(manifestKey ? { manifest: key(manifestKey) } : {}) };
-    const stored = await walletClient.createEntity({ attributes, payload: manifestKey ? new Uint8Array() : bytes, contentType: manifestKey ? 'application/octet-stream' : info.contentType, expires: ExpirationTime.fromBlocks(expirationBlocks), flags: { readonly: true } });
-    transactionHashes.push(stored.txHash);
+    const head = BigInt(await walletClient.transport.request({ method: 'eth_blockNumber' }) as Hex);
+    if (expiresAt <= head + 1n) fail('INVALID_INPUT', 'The image deadline passed before its root write. Inspect the manifest; no root was submitted.');
+    const values = { type: IMAGE_TYPE, mode: plan.mode, mime: info.contentType, filename, sha256, size: u64(bytes.length), width: u64(info.width), height: u64(info.height), data: manifestKey ? new Uint8Array() : bytes, ...(manifestKey ? { manifest: key(manifestKey) } : {}) };
+    const createOptions = { expiration: ExpirationTime.atBlock(expiresAt), salt: randomSalt(), flags: { readonly: true } };
+    const stored = await writeWithPolicy(observedWallet, { phase: 'finalize' },
+      (unsigned: ChunkingWalletClient) => unsigned.createEntity(ImageSchema, values, createOptions, { gas: 1_000_000n, gasPrice: 1n, nonce: 0 }),
+      (parameters: WriteTransactionParameters) => observedWallet.createEntity(ImageSchema, values, createOptions, parameters), transactionHashes, txParams,
+      (result: { entityKey: Hex }) => { imageKey = result.entityKey; submitted(imageKey, transactionHashes); });
     return { ...info, imageKey: stored.entityKey, manifestKey, mode: plan.mode, sha256, transactionHashes };
   } catch (cause) {
     if (cause instanceof ChunkingError) {
       manifestKey = cause.manifestKey ?? manifestKey;
-      transactionHashes.push(...cause.transactionHashes);
+      cause.transactionHashes.forEach(rememberHash);
     }
     if (cause instanceof ImageStorageError && !transactionHashes.length) throw cause;
-    throw new ImageStorageError('UPLOAD_FAILED', 'Upload did not complete. Inspect the wallet and available transaction receipts before retrying; any previously written entities remain.', { cause, manifestKey, transactionHashes });
+    const pending = cause instanceof WriteConfirmationPendingError || (cause instanceof ChunkingError && cause.code === 'CONFIRMATION_PENDING');
+    throw new ImageStorageError(pending ? 'CONFIRMATION_PENDING' : 'UPLOAD_FAILED', pending ? 'The SDK reported a successful write, but receipt confirmation is pending. Preserve the image/manifest keys and hashes; inspect them using reads and never resend automatically.' : 'Upload did not complete. Inspect the wallet and available transaction receipts before retrying; any previously written entities remain.', { cause, manifestKey, imageKey, transactionHashes });
   }
 }
 function attr(attributes: Record<string, unknown>, name: string, type: string): unknown {
@@ -140,23 +232,26 @@ export async function retrieveImage({ publicClient, imageKey, expectedSha256, on
   if (!hex32(imageKey) || (expectedSha256 !== undefined && !hex32(expectedSha256))) fail('INVALID_INPUT', 'Use a 32-byte image key and, optionally, a 32-byte SHA-256.');
   try {
     await checkNetwork(publicClient);
-    const page = await publicClient.select({ payload: true, expiresAt: true, attributes: { type: true, mode: true, mime: true, filename: true, sha256: true, size: true, width: true, height: true, manifest: true } }).where(eq('$key', key(imageKey))).limit(1).fetch();
+    const page = await publicClient.select({ $expiresAt: true, $creationFlags: true, 'arkiv.schema': true, type: true, mode: true, mime: true, filename: true, sha256: true, size: true, width: true, height: true, manifest: true, data: true }).where(eq('$key', key(imageKey))).limit(1).fetch();
     const entity = page.entities[0];
     if (!entity) fail('NOT_FOUND', 'Image entity not found. Check key, network and Entity Expiration.');
-    const a = entity.attributes;
-    if (attr(a, 'type', 'str') !== IMAGE_TYPE) fail('INVALID_ENTITY', 'This is not an arkiv-images v1 entity.');
-    const mode = attr(a, 'mode', 'str'), mime = attr(a, 'mime', 'str'), filename = attr(a, 'filename', 'str'), digest = attr(a, 'sha256', 'bytes32'), size = attr(a, 'size', 'u64');
+    const a = entity;
+    if (attr(a, 'type', 'str') !== IMAGE_TYPE || attr(a, 'arkiv.schema', 'str') !== IMAGE_TYPE || !entity.$creationFlags?.readonly || entity.$expiresAt <= page.blockNumber) fail('INVALID_ENTITY', 'This is not a live immutable arkiv-images v2 entity.');
+    const mode = attr(a, 'mode', 'str'), mime = attr(a, 'mime', 'str'), filename = attr(a, 'filename', 'str'), digest = attr(a, 'sha256', 'str'), size = attr(a, 'size', 'u64');
     if ((mode !== 'inline' && mode !== 'chunked') || (mime !== 'image/png' && mime !== 'image/jpeg') || !hex32(digest) || typeof size !== 'bigint' || size < 1n || size > BigInt(MAX_IMAGE_BYTES)) fail('INVALID_ENTITY', 'Invalid image storage metadata.');
     filenameValid(filename);
     if (expectedSha256 && digest.toLowerCase() !== expectedSha256.toLowerCase()) fail('HASH_MISMATCH', 'Image digest differs from the trusted SHA-256.');
-    let bytes = entity.payload, expiresAt = entity.expiresAt;
+    const data = attr(a, 'data', 'bytes');
+    if (typeof data !== 'string' || !/^0x(?:[\da-f]{2})*$/i.test(data) || (data.length - 2) / 2 > INLINE_MAX_BYTES) fail('INVALID_ENTITY', 'Invalid inline image bytes.');
+    let bytes = hexToBytes(data as Hex), expiresAt = entity.$expiresAt;
     if (mode === 'chunked') {
       const manifestKey = attr(a, 'manifest', 'key');
-      if (!hex32(manifestKey)) fail('INVALID_ENTITY', 'Invalid chunk manifest reference.');
+      if (!hex32(manifestKey) || bytes.length !== 0 || size <= BigInt(INLINE_MAX_BYTES)) fail('INVALID_ENTITY', 'Invalid chunk manifest reference or image mode.');
       const result = await downloadFile({ publicClient, manifestKey, expectedSha256: digest, onProgress });
-      bytes = result.bytes; expiresAt = result.expiresAt < expiresAt ? result.expiresAt : expiresAt;
+      if (result.expiresAt !== expiresAt) fail('INVALID_ENTITY', 'Image and file deadlines disagree. Independent part extensions are not supported.');
+      bytes = result.bytes;
       if (result.contentType !== mime || result.filename !== filename) fail('INVALID_ENTITY', 'Image and file metadata disagree.');
-    } else if (bytes.length > INLINE_MAX_BYTES) fail('INVALID_ENTITY', 'Inline payload exceeds the image format limit.');
+    } else if (a.manifest !== undefined) fail('INVALID_ENTITY', 'Inline images cannot reference a manifest.');
     const info = inspectImage(bytes, mime);
     if (BigInt(bytes.length) !== size || BigInt(info.width) !== attr(a, 'width', 'u64') || BigInt(info.height) !== attr(a, 'height', 'u64')) fail('INVALID_ENTITY', 'Image dimensions or size disagree with attributes.');
     if (await hashFile(bytes) !== digest.toLowerCase()) fail('HASH_MISMATCH', 'Recovered image bytes failed SHA-256 verification.');

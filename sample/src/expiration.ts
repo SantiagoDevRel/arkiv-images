@@ -3,8 +3,8 @@ import type { GetBlockTimingReturnType } from '@arkiv-network/sdk';
 const MAX_DATE_MS = 8_640_000_000_000_000;
 const MAX_UINT64 = (1n << 64n) - 1n;
 const MAX_SAFE_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
-// This sample consumes arkiv-images 0.1.1, whose admission limits are block based.
-const MAX_EXPIRATION_BLOCKS = 15_768_000;
+// Rabdi maximum less a 30-block inclusion margin, matching arkiv-images 1.0.
+const MAX_EXPIRATION_BLOCKS = 7_883_970;
 const MAX_IMAGE_TRANSACTIONS = 266;
 export const MAX_TIMING_AGE_MS = 5 * 60 * 1000;
 

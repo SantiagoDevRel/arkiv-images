@@ -1,7 +1,7 @@
 import { createPublicClient } from '@arkiv-network/sdk';
-import { tiramisu } from '@arkiv-network/sdk/chains';
+import { rabdi } from '@arkiv-network/sdk/chains';
 import { http, type EIP1193Provider, type Hex } from 'viem';
-import { inspectImage, planImage, storeImage, retrieveImage, ImageStorageError, ChunkingError, VERSION } from 'arkiv-images';
+import { inspectImage, planImage, createImageWriteOperation, retrieveImage, ImageStorageError, ChunkingError, VERSION, type ImageWriteOperation } from 'arkiv-images';
 import { connectWallet, guardWallet, guardedWalletClient } from './wallet';
 import { dateToBlocks, estimateExpirationDate, toLocalDateTimeInput, ExpirationInputError } from './expiration';
 import { inspectImageEntities } from './inspection';
@@ -14,13 +14,13 @@ const el = <T extends HTMLElement = HTMLElement>(id: string): T => {
   if (!element) throw new Error(`Missing interface element: ${id}`);
   return element as T;
 };
-const client = createPublicClient({ chain: tiramisu, transport: http(tiramisu.rpcUrls.default.http[0], { retryCount: 0, timeout: 30000, fetchOptions: { cache: 'no-store' } }) });
+const client = createPublicClient({ chain: rabdi({ accessKey: '' }), transport: http(new URL('/api/rpc', window.location.origin).href, { retryCount: 0, timeout: 30000, fetchOptions: { cache: 'no-store' } }) });
 const wallets = new Map<string, { name: string; provider: EIP1193Provider }>();
 const walletSelect = el<HTMLSelectElement>('wallet');
 let connected: { provider: EIP1193Provider; address: Hex } | undefined;
 let detachWallet: (() => void) | undefined;
 let busy = false, selectionId = 0, originalUrl: string | undefined, recoveredUrl: string | undefined;
-let selected: { bytes: Uint8Array; filename: string } | undefined;
+let selected: { bytes: Uint8Array; filename: string; operation?: ImageWriteOperation } | undefined;
 let stored: { key: Hex; bytes: Uint8Array; sha256: Hex } | undefined;
 function syncTheme() {
   const label = document.documentElement.dataset.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
@@ -80,11 +80,13 @@ function provider() { const p = wallets.get(walletSelect.value)?.provider; if (!
 function message(error: unknown): string {
   if (error instanceof ExpirationInputError) return error.message;
   if (error instanceof ImageStorageError || error instanceof ChunkingError) {
+    if (error instanceof ImageStorageError && error.code === 'INVALID_INPUT') return error.message;
     const map: Record<string,string> = {
       INVALID_IMAGE: 'The image is not a supported PNG/JPEG, is damaged, or exceeds the pixel limit.',
       TOO_LARGE: 'The image exceeds 25 MiB. Choose a smaller file.',
       INVALID_INPUT: 'Check the image key, filename and expiration date.',
-      NETWORK_MISMATCH: 'Reconnect your wallet to continue on Tiramisu.',
+      NETWORK_MISMATCH: 'Reconnect your wallet to continue on Rabdi.',
+      CONFIRMATION_PENDING: 'A write was reported successful but its receipt recheck is pending. Preserve the keys and hashes below; inspect them before trying another upload.',
       NOT_FOUND: 'Image not found. Check the key and network; the entity may have expired.',
       UPLOAD_FAILED: 'Storing did not complete. Inspect your wallet and available receipts before trying again.',
       READ_FAILED: 'Could not reach Arkiv. Check your connection and try retrieving again.',
@@ -98,7 +100,7 @@ function message(error: unknown): string {
   }
   const code = (error as { code?: number })?.code;
   if (code === 4001) return 'You rejected the wallet request. This operation was not confirmed.';
-  const known: Record<string,string> = { NO_WALLET: 'Install or enable MetaMask or Rabby, then reload this page.', INVALID_RPC: 'Use a valid Tiramisu HTTPS URL. HTTP is accepted only on localhost.', CONNECT_FIRST: 'Connect a wallet before storing an image.', WRONG_CHAIN: 'Your wallet changed networks. Reconnect before storing.', WALLET_CHANGED: 'The account or network changed. Inspect confirmed transactions before trying again.', DECODE_FAILED: 'The browser could not decode the image. Choose a valid PNG/JPEG.', BYTES_DIFFER: 'The recovered image does not match the original file byte for byte.' };
+  const known: Record<string,string> = { NO_WALLET: 'Install or enable MetaMask or Rabby, then reload this page.', ADD_NETWORK: 'Configure Rabdi (7794095) in your wallet with your own access key from hub.arkiv.network/access-keys, then reconnect.', CONNECT_FIRST: 'Connect a wallet before storing an image.', WRONG_CHAIN: 'Your wallet changed networks. Reconnect before storing.', WALLET_CHANGED: 'The account or network changed. Inspect confirmed transactions before trying again.', DECODE_FAILED: 'The browser could not decode the image. Choose a valid PNG/JPEG.', BYTES_DIFFER: 'The recovered image does not match the original file byte for byte.' };
   return known[(error as Error)?.message] ?? 'The operation did not complete. Check your connection, testnet funds and pending wallet requests.';
 }
 
@@ -205,11 +207,15 @@ el<HTMLFormElement>('upload-form').addEventListener('submit', async event => {
   setBusy(true); stored = undefined; el('upload-result').hidden = true; clearRecovered(); status('read-status','');
   let key: Hex | undefined;
   try {
-    if (session.provider !== provider()) throw new Error('CONNECT_FIRST');
-    await guardWallet(session.provider,session.address,connected !== session);
-    const expirationBlocks = dateToBlocks(new Date(el<HTMLInputElement>('expiration').value),await client.getBlockTiming(),planImage(original.bytes.length).transactionCount);
+    const requestedDate = new Date(el<HTMLInputElement>('expiration').value);
+    original.operation ??= createImageWriteOperation(async () => {
+      if (session.provider !== provider()) throw new Error('CONNECT_FIRST');
+      await guardWallet(session.provider,session.address,connected !== session);
+      const expirationBlocks = dateToBlocks(requestedDate,await client.getBlockTiming(),planImage(original.bytes.length).transactionCount);
+      return {publicClient:client,walletClient:guardedWalletClient(session.provider,session.address,()=>connected !== session),bytes:original.bytes,filename:original.filename,expirationBlocks,onProgress:p=>status('upload-status',`Storing: ${p.completed}/${p.total} chunks. Check your wallet\u2026`,'loading')};
+    });
     el('result-state').textContent = 'Storing'; status('upload-status','Confirm the transactions in your wallet\u2026','loading');
-    const result = await storeImage({publicClient:client,walletClient:guardedWalletClient(session.provider,session.address,()=>connected !== session),bytes:original.bytes,filename:original.filename,expirationBlocks,onProgress:p=>status('upload-status',`Storing: ${p.completed}/${p.total} chunks. Check your wallet\u2026`,'loading')});
+    const result = await original.operation.run();
     stored = {key:result.imageKey,bytes:original.bytes,sha256:result.sha256}; key = result.imageKey;
     el<HTMLInputElement>('image-key').value = key; el('uploaded-key').textContent = key;
     el('receipts').replaceChildren(...result.transactionHashes.map(hash => {
@@ -223,7 +229,10 @@ el<HTMLFormElement>('upload-form').addEventListener('submit', async event => {
     el('upload-result').hidden = false; status('upload-status','Stored.','success');
   } catch(error) {
     let detail = message(error);
-    if(error instanceof ImageStorageError && error.manifestKey) detail += ` Recovery manifest: ${error.manifestKey}. Confirmed transactions: ${error.transactionHashes.join(', ')}. This is a file key, not an image key.`;
+    if(error instanceof ImageStorageError && error.manifestKey) detail += ` Recovery manifest: ${error.manifestKey}. Observed transactions: ${error.transactionHashes.join(', ')}. This is a file key, not an image key.`;
+    if(error instanceof ImageStorageError && !error.manifestKey && error.transactionHashes.length) detail += ` Observed transactions: ${error.transactionHashes.join(', ')}.`;
+    if(error instanceof ImageStorageError && error.imageKey) detail += ` Recovery image key: ${error.imageKey}.`;
+    detail += ' This operation will not resend on another click. After checking your wallet, choose the file again only if you intend a new upload.';
     el('result-state').textContent = 'Could not store'; status('upload-status',detail,'error');
   }
   try { if(key) await readImage(key); } finally { setBusy(false); }
@@ -235,3 +244,13 @@ el<HTMLFormElement>('read-form').addEventListener('submit',async event=>{
 });
 window.addEventListener('pagehide',()=>{detachWallet?.();if(originalUrl)URL.revokeObjectURL(originalUrl);if(recoveredUrl)URL.revokeObjectURL(recoveredUrl);});
 mode('store'); setBusy(false);
+// Public synthetic seeds are hints only; every load runs the package's full integrity checks.
+void fetch('/samples.json', { cache: 'no-store' }).then(response => response.ok ? response.json() : undefined).then(data => {
+  const item = data?.cases?.[0];
+  if (!/^0x[\da-f]{64}$/i.test(item?.imageKey ?? '')) return;
+  const button = el<HTMLButtonElement>('load-sample'); button.disabled = false;
+  button.addEventListener('click', async () => {
+    if (busy) return; mode('retrieve'); el<HTMLInputElement>('image-key').value = item.imageKey; setBusy(true);
+    try { await readImage(item.imageKey); } finally { setBusy(false); }
+  });
+}).catch(() => { /* Samples can be reseeded without blocking visitor-owned images. */ });

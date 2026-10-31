@@ -1,0 +1,157 @@
+{
+  "chainId": 7794095,
+  "cases": [
+    {
+      "filename": "rabdi-public-inline.png",
+      "imageKey": "0xc4edc02a7bb871a311fe301003a187d49f167ba781ee78993673d60f57e1bc95",
+      "sha256": "0x31c2782dc1ad3ce9a983c9743ed67337125b433dc08e532da315ed58e63203a4",
+      "mode": "inline",
+      "format": "image/png",
+      "bytes": 120000,
+      "width": 320,
+      "height": 200,
+      "expiresAt": "19707",
+      "byteExact": true,
+      "transactions": [
+        {
+          "hash": "0x7a653d54754df44815981e22d5ee08d9b95686f09b0594b1f809f40295cec464",
+          "status": "success",
+          "gasUsed": "4851921",
+          "gasLimit": "9783200",
+          "gasPrice": "1000000000",
+          "blockNumber": "16110"
+        }
+      ]
+    },
+    {
+      "filename": "rabdi-public-chunked.png",
+      "imageKey": "0x3e1eda66d2cf07867a01fd87a3c78c940e0b9c24bc97f2630aff3fd484ef1996",
+      "sha256": "0xc99a39198cd5767d1c5443044e09d554cbf6eddea0fb4f3d89c9bee346cfd0e6",
+      "mode": "chunked",
+      "format": "image/png",
+      "bytes": 120001,
+      "width": 320,
+      "height": 200,
+      "expiresAt": "19713",
+      "byteExact": true,
+      "transactions": [
+        {
+          "hash": "0x7664141c3ebf658fa2edd3366ca7756b551ae16e06a08d78bf343694c831c435",
+          "status": "success",
+          "gasUsed": "144496",
+          "gasLimit": "1000000",
+          "gasPrice": "1000000000",
+          "blockNumber": "16115"
+        },
+        {
+          "hash": "0xf2eef3ca59b029c9c133e5c7f28679d52569533dae5ff784d50bc6a7688ab4cd",
+          "status": "success",
+          "gasUsed": "4037190",
+          "gasLimit": "8140802",
+          "gasPrice": "1000000000",
+          "blockNumber": "16119"
+        },
+        {
+          "hash": "0x9258c904e6d71f081aa5bbdc7090f3b02ceccb3aaef1a611f647b38f4a2e2f0d",
+          "status": "success",
+          "gasUsed": "840804",
+          "gasLimit": "1697290",
+          "gasPrice": "1000000000",
+          "blockNumber": "16122"
+        },
+        {
+          "hash": "0xdd691739009a9ce7d8f3cc62c5e3cfdc3dfdfc64294fb6319aaaff77f329bde4",
+          "status": "success",
+          "gasUsed": "47091",
+          "gasLimit": "1000000",
+          "gasPrice": "1000000000",
+          "blockNumber": "16126"
+        },
+        {
+          "hash": "0x17345e1d64a6664d67900b22b3c4e9f58a738b007f96644198e93e0f5eb95f72",
+          "status": "success",
+          "gasUsed": "160684",
+          "gasLimit": "1000000",
+          "gasPrice": "1000000000",
+          "blockNumber": "16129"
+        }
+      ]
+    },
+    {
+      "filename": "rabdi-public-inline.jpg",
+      "imageKey": "0x2989bda8bbadfe7e22a0b1e3a435aa3b266106adbbca3f97c162ee4eccca8488",
+      "sha256": "0x6505b34edf4866c89d73791c5b775ee8588ba62ba54249051891d7833d3b1684",
+      "mode": "inline",
+      "format": "image/jpeg",
+      "bytes": 2977,
+      "width": 320,
+      "height": 200,
+      "expiresAt": "7900102",
+      "byteExact": true,
+      "transactions": [
+        {
+          "hash": "0xce4076bcb59b789493b5224d99cc4824fbf59b1538771d14b933600c56c201ed",
+          "status": "success",
+          "gasUsed": "861622",
+          "gasLimit": "1739256",
+          "gasPrice": "1000000000",
+          "blockNumber": "16135"
+        }
+      ]
+    },
+    {
+      "filename": "rabdi-public-chunked.jpg",
+      "imageKey": "0xa8d93ed220c49a0872f288b35da9494d45b06fe21ec13edb747d38196aaeaf53",
+      "sha256": "0x54053f8b9fa8fbf575fc21b68502276e8a4ca249312cd34d292827518fee07a0",
+      "mode": "chunked",
+      "format": "image/jpeg",
+      "bytes": 130001,
+      "width": 320,
+      "height": 200,
+      "expiresAt": "19737",
+      "byteExact": true,
+      "transactions": [
+        {
+          "hash": "0x7773e2e9657abd063cb91799077002f910bda08ac210ba97b5585bfcf16fd819",
+          "status": "success",
+          "gasUsed": "144519",
+          "gasLimit": "1000000",
+          "gasPrice": "1000000000",
+          "blockNumber": "16140"
+        },
+        {
+          "hash": "0xba0514e0365dd6c5e43ba39286fb7b1d50a96f7ef6dc541b45eaa46d26cf49a8",
+          "status": "success",
+          "gasUsed": "4044719",
+          "gasLimit": "8155982",
+          "gasPrice": "1000000000",
+          "blockNumber": "16144"
+        },
+        {
+          "hash": "0x8167c8d43bff578f54e97c4f5f3cadc341270e7d6d96fec750133615f8409268",
+          "status": "success",
+          "gasUsed": "1230616",
+          "gasLimit": "2483102",
+          "gasPrice": "1000000000",
+          "blockNumber": "16147"
+        },
+        {
+          "hash": "0x9a89cef71177ecf549e2e9cb1fceb1bae80c33b8b4d4e9bca016ccc74232adf2",
+          "status": "success",
+          "gasUsed": "47096",
+          "gasLimit": "1000000",
+          "gasPrice": "1000000000",
+          "blockNumber": "16150"
+        },
+        {
+          "hash": "0x5a5ffc1a691d0f362d2d3100a880ec05e59022265aaf41453523f89877767ebf",
+          "status": "success",
+          "gasUsed": "158710",
+          "gasLimit": "1000000",
+          "gasPrice": "1000000000",
+          "blockNumber": "16152"
+        }
+      ]
+    }
+  ]
+}

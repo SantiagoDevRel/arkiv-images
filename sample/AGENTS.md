@@ -1,16 +1,15 @@
+Edit instructions only in AGENTS.md; CLAUDE.md only imports this file.
+
 # Integrating the image sample
 
-Read [README.md](README.md) to run the sample and follow its user flow. Read the [package consumer guide](../AGENTS.md) and linked package README for the API and hard invariants. Do not duplicate those instructions here.
+Read README.md here and the package README/AGENTS.md before changing the sample. Preserve its existing visual design and English Arkiv copy.
 
-- The sample consumes the exact released npm package. No sibling source imports, local dependency aliases, copied chunking or copied image-storage implementation.
-- Ask the developer to choose a safe public image, connect a wallet and authorize testnet writes. Never ask for a private key. Ask for an image entity key if the objective is retrieval only; no wallet needed then.
-- The sample is explicitly Tiramisu-only. Check wallet identity and chain before every write. Wallet selection uses EIP-6963 with injected EIP-1193 fallback; do not silently select another connected account.
-- Connect in the top bar; connection switches/adds Tiramisu automatically. Never switch or retry a signature halfway through a write. Preserve account/network guards before every signature.
-- Keep the public-image chooser, preview, measured transaction count and visible recovery errors. There is no consent checkbox. Store & verify performs retrieval automatically; success requires package completion, browser decode and byte verification. Clear old results before a new operation.
-- The sample uses the SDK's Tiramisu RPC internally; no RPC editor or browser credentials. Never expose raw provider errors. Render filenames as text, recovered data only as PNG/JPEG. Revoke object URLs when replaced.
-- Date/time is local to the browser and converted using fresh getBlockTiming data. Preserve the date adapter's clock, range and package admission checks; never assume a fixed block duration or promise exact clock-time expiration.
-- The entity inspector makes separate read-only snapshot queries after package retrieval and checks them against the recovered bytes. Display actual keys, typed attributes and payloads. An inspection failure has its own error and must not invalidate an already verified image or present guessed entities.
-- Payload boxes show complete per-entity bytes as hexadecimal text, never HTML. Keep scroll local and keyboard-accessible. Explorer links use the fixed Tiramisu indexer origin and validated 32-byte entity keys; do not accept a user-supplied destination.
-- Keep dark as the initial theme, with a persistent sun/moon toggle and readable contrast in both themes. A disconnected Store action must explain connection instead of silently doing nothing; it must not sign without an authorized wallet.
-- Preserve the Claude Design/Lovable layout and Arkiv token/type contract documented in README. Keep all interface copy, statuses and errors in English. Verify 390/768/1440 widths, both sides of 600 and 900 px, keyboard and 200% zoom, with empty/loading/error and restored-image states. Design provenance is linked from README; no design-service account is required to consume the sample.
-- Run the documented build and browser checks, and state whether the wallet/RPC were mocked or real. A local tarball is not an npm release. Do not deploy this preview without the developer's review.
+- Run `npm ci` in sample; it pins the registry release arkiv-images 1.0.0, SDK 1.0.0 and chunking 1.1.0. Never import sibling source or duplicate package storage, chunking or transaction policy.
+- Retrieval is read-only through /api/rpc. Set ARKIV_ACCESS_KEY server-side only; no browser access key, arbitrary RPC destination, signing method, batch request, historical-state query or raw provider error may pass the proxy.
+- Browser writes use MetaMask/Rabby and the visitor's account/Rabdi RPC. Ask the visitor to configure their own key in their wallet if Rabdi is missing. Never request a private key or add a server signer. Guard account/network before each signature; never switch halfway through a write.
+- Keep the selected file's createImageWriteOperation across clicks/re-renders, including failed or uncertain results. Setup runs after its sending guard is stored. Only an explicit new file choice creates another upload operation. Preserve submitted hashes before receipt rechecks; only an authoritative gas-exhausted revert permits the shared policy's one bounded retry.
+- Preserve the safe public-image picker, full browser decode on both sides, measured transaction count, local-date expiration adapter, checks against the package lifetime limits, visible recovery keys/hashes and object URL cleanup.
+- Inspection reads actual latest-state entities after verified package retrieval. Display stored bytes as text, expose typed metadata accurately, and keep inspection errors separate from verified image status. Do not claim a pinned snapshot or mark all attributes indexed.
+- Fixed explorer origin, validated 32-byte keys, safe link rel values; no filename HTML or uploaded SVG/HTML rendering.
+- Run the documented checks, then inspect 390/768/1440 widths, dark/light, keyboard and 200% zoom, loading/empty/error/recovered states. State what was controlled RPC and what was live. Preserve real failures.
+- scripts/seed-rabdi.mjs at package root is idempotent through on-chain discovery and a private persistent unresolved-write journal. Never erase the journal to repeat a write.

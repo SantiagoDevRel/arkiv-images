@@ -4,6 +4,8 @@
 !/tsconfig.json
 !/index.html
 !/vercel.json
+!/api
+!/api/**
 !/src
 !/src/**
 !/public
