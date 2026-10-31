@@ -1,6 +1,6 @@
-# Rabdi candidate verification
+# Rabdi release verification
 
-Candidate: **arkiv-images 1.0.0**, SDK **1.0.0**, viem **2.56.3**, exact registry **arkiv-chunking 1.1.0**. This source candidate is not an npm publication or production deployment. Review approval is required before either.
+Release: **arkiv-images 1.0.0**, SDK **1.0.0**, viem **2.56.3**, exact registry **arkiv-chunking 1.1.0**. The separately approved tarball was published without rebuilding: SHA-256 `c4c5417edb32179f7cc2f39b2e959711103925f019a0bd0ba62e84593826c110`, npm shasum `ff85d022ad0d3e074f002fec06a52cb2914b1d34`. Registry installation is checked independently from the earlier candidate installation.
 
 ## Library and operation tests
 
@@ -39,8 +39,8 @@ Long expiration materially affects estimates: unsigned 120,000/100,000/70,000-by
 
 ## Artifacts and sample gate
 
-`node scripts/verify-candidate.mjs` requires live evidence, runs the library gates, packs the publication allowlist, installs that exact tarball in a clean consumer, runs the exact README inspection example and public TypeScript imports, refreshes the sample lock from the registry and builds the sample. Its artifact report records SHA-256/SHA-512 and distinguishes a packed candidate from a registry release. The sample pins chunking 1.1.0 directly and consumes the packed image candidate.
+`node scripts/verify-candidate.mjs --registry` requires the existing live evidence, runs library gates, verifies the registry archive against the approved SHA-256/SHA-512/shasum, installs exact registry 1.0.0 in a clean consumer and runs the exact README inspection example, public TypeScript imports and linked-guide presence checks. It compares installed JavaScript with the built source, performs a clean sample install and builds it. Its registry artifact report distinguishes these checks from the earlier packed-candidate tests. The sample pins registry images 1.0.0 and chunking 1.1.0 directly; no local tarball is used.
 
-The preview uses the existing arkiv-images-example project. Read access is through its bounded server-side endpoint with a server-only access key; browser writes use the visitor's configured Rabdi wallet. Hydrated preview validation and its deployment ID are recorded in the PR's validation report. Live browser retrieval, local input/decode failures and controlled wallet/operation tests are different checks; neither replaces the other. No npm publish, production deploy, tag, merge or release belongs to this candidate review.
+The sample uses the existing arkiv-images-example project. Read access is through its bounded server-side endpoint with a server-only access key; browser writes use the visitor's configured Rabdi wallet. Hydrated deployment validation, production and rollback IDs are recorded separately in the release handoff. Live browser retrieval, local input/decode failures and controlled wallet/operation tests are different checks; neither replaces the other. Browser-wallet signing was not exercised in the migration checks.
 
 Historical dated evidence remains under docs and is not validation of this release. The previous chunking 1.0.0 public-export failure was resolved by the separately published 1.1.0; no private dependency import, copied gas policy or relaxed acceptance rule was used.

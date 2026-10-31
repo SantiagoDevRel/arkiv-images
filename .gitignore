@@ -7,5 +7,6 @@ dist/
 .seed-rabdi-state.json
 .seed-rabdi-state.json.lock
 candidate-artifact.json
+registry-artifact.json
 migration-diagnostics.json
 diagnostic-package-lock.json

@@ -2,18 +2,18 @@
 
 Store a public PNG or JPEG as queryable Arkiv entities, then retrieve its original bytes with size, MIME, dimensions and SHA-256 checks. Small images use one entity with a non-indexed `bytes()` column. Larger images use `arkiv-chunking`: an image entity references a file manifest and ordered immutable chunks.
 
-**1.0.0 is a candidate, pending verification and publication. Intended for Rabdi testnet only.** The published release remains separate from this source candidate. See [verification](docs/verification.md) for actual results and blockers.
+**Version 1.0.0 targets Rabdi testnet only.** See [verification](docs/verification.md) for the published artifact, actual results and limitations.
 
 ## Install and inspect
 
-ESM, Node 22.10+ with Web Crypto, or a browser on HTTPS/localhost. Candidate dependencies: SDK 1.0.0, viem 2.56.3, arkiv-chunking 1.1.0. Install the packed candidate until 1.0.0 is published:
+ESM, Node 22.10+ with Web Crypto, or a browser on HTTPS/localhost. Tested dependencies: SDK 1.0.0, viem 2.56.3, arkiv-chunking 1.1.0.
 
 ```sh
 mkdir image-consumer
 cd image-consumer
 npm init -y
 npm pkg set type=module
-npm install /absolute/path/arkiv-images-1.0.0.tgz @arkiv-network/sdk@1.0.0 viem@2.56.3
+npm install arkiv-images@1.0.0 @arkiv-network/sdk@1.0.0 viem@2.56.3
 ```
 
 Save `inspect.mjs`:
@@ -109,7 +109,7 @@ The package checks containers, not full PNG CRC/JPEG entropy decoding or malware
 
 ## Sample and development
 
-The [sample README](sample/README.md) explains the existing `arkiv-images-example` project, preview status and visitor-wallet setup. Reads use its own bounded `/api/rpc` endpoint and a server-side `ARKIV_ACCESS_KEY`; the visitor configures their own wallet RPC. No server signer. Candidate previews consume the packed candidate; registry releases must be verified separately.
+The [sample README](sample/README.md) explains the existing `arkiv-images-example` project and visitor-wallet setup. Reads use its own bounded `/api/rpc` endpoint and a server-side `ARKIV_ACCESS_KEY`; the visitor configures their own wallet RPC. No server signer. The sample pins the released registry package `arkiv-images@1.0.0`.
 
 Give consumer agents [AGENTS.md](AGENTS.md) and [sample/AGENTS.md](sample/AGENTS.md) explicitly. The corresponding CLAUDE.md files only import those guides.
 

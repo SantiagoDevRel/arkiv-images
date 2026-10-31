@@ -14,7 +14,7 @@
   "dependencies": {
     "@arkiv-network/sdk": "1.0.0",
     "arkiv-chunking": "1.1.0",
-    "arkiv-images": "file:arkiv-images-1.0.0.tgz",
+    "arkiv-images": "1.0.0",
     "viem": "2.56.3"
   },
   "devDependencies": {

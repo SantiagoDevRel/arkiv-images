@@ -2,7 +2,7 @@ Edit instructions only in AGENTS.md; CLAUDE.md only imports this file.
 
 # Integrating arkiv-images
 
-Read [README.md](README.md) explicitly for the public API, runnable local example, data model, limits, signing and recovery. Version 1.0.0 is a candidate until verification/publication evidence says otherwise.
+Read [README.md](README.md) explicitly for the public API, runnable local example, data model, limits, signing and recovery. Install the released version with `npm install arkiv-images@1.0.0 @arkiv-network/sdk@1.0.0 viem@2.56.3`.
 
 - Ask whether the task needs local inspection, retrieval or a new public upload. Inspection requires no network. Retrieval needs an image key, Rabdi and optionally an independently trusted SHA-256. Writes additionally require a locally configured signing wallet and test funds.
 - Ask whether original bytes, filename and metadata are safe to publish. EXIF/GPS is preserved. Stop if confidentiality is required; encryption is a different tool.
