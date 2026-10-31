@@ -67,7 +67,7 @@ export function createImageWriteOperation(options: StoreImageOptions | (() => Pr
       // Store the promise before the first network call, including synchronous provider callbacks.
       promise = Promise.resolve().then(async () => executeStoreImage(typeof snapshot === 'function' ? await snapshot() : snapshot, (key, txHashes) => {
         state = 'submitted'; imageKey = key; hashes = [...txHashes];
-      })).then(result => {
+      }, txHashes => { hashes = [...txHashes]; })).then(result => {
         state = 'complete'; imageKey = result.imageKey; hashes = [...result.transactionHashes]; return result;
       }, error => {
         if (error instanceof ImageStorageError) {
@@ -151,7 +151,7 @@ async function checkNetwork(client: ChunkingPublicClient, wallet?: ChunkingWalle
 export async function storeImage(options: StoreImageOptions): Promise<StoredImage> {
   return createImageWriteOperation(options).run();
 }
-async function executeStoreImage(options: StoreImageOptions, submitted: (key: Hex, hashes: readonly Hex[]) => void): Promise<StoredImage> {
+async function executeStoreImage(options: StoreImageOptions, submitted: (key: Hex, hashes: readonly Hex[]) => void, observed: (hashes: readonly Hex[]) => void): Promise<StoredImage> {
   const { publicClient, walletClient, filename, expirationBlocks, onProgress } = options;
   filenameValid(filename);
   const info = inspectImage(options.bytes, options.contentType), plan = planImage(info.byteLength);
@@ -160,6 +160,25 @@ async function executeStoreImage(options: StoreImageOptions, submitted: (key: He
   let manifestKey: Hex | undefined;
   let imageKey: Hex | undefined;
   const transactionHashes: Hex[] = [];
+  const rememberHash = (hash: Hex) => {
+    if (!transactionHashes.includes(hash)) { transactionHashes.push(hash); observed(transactionHashes); }
+  };
+  // Observe the public SDK mutation boundary before the shared policy can query a receipt.
+  // EntityMutationError.txHash survives even when that lookup fails and hides the SDK error.
+  // This only retains evidence; the dependency still owns gas, receipt handling and retries.
+  const observeMutation = async <T extends { txHash: Hex }>(mutate: () => Promise<T>): Promise<T> => {
+    try { const result = await mutate(); rememberHash(result.txHash); return result; }
+    catch (error) {
+      const hash = error && typeof error === 'object' && 'txHash' in error ? error.txHash : undefined;
+      if (hex32(hash)) rememberHash(hash);
+      throw error;
+    }
+  };
+  const observedWallet: ChunkingWalletClient = {
+    ...walletClient,
+    createEntity: (...args) => observeMutation(() => walletClient.createEntity(...args)),
+    patchEntity: (...args) => observeMutation(() => walletClient.patchEntity(...args)),
+  };
   try {
     await checkNetwork(publicClient, walletClient);
     let expiresAt = BigInt(await walletClient.transport.request({ method: 'eth_blockNumber' }) as Hex) + BigInt(expirationBlocks);
@@ -178,8 +197,8 @@ async function executeStoreImage(options: StoreImageOptions, submitted: (key: He
     };
     const sha256 = await hashFile(bytes);
     if (plan.mode === 'chunked') {
-      const stored = await uploadFile({ publicClient, walletClient, bytes, filename, contentType: info.contentType, expirationBlocks, onProgress, txParams });
-      manifestKey = stored.manifestKey; transactionHashes.push(...stored.transactionHashes);
+      const stored = await uploadFile({ publicClient, walletClient: observedWallet, bytes, filename, contentType: info.contentType, expirationBlocks, onProgress, txParams });
+      manifestKey = stored.manifestKey; stored.transactionHashes.forEach(rememberHash);
       expiresAt = stored.expiresAt;
     }
     await checkNetwork(publicClient, walletClient);
@@ -187,15 +206,15 @@ async function executeStoreImage(options: StoreImageOptions, submitted: (key: He
     if (expiresAt <= head + 1n) fail('INVALID_INPUT', 'The image deadline passed before its root write. Inspect the manifest; no root was submitted.');
     const values = { type: IMAGE_TYPE, mode: plan.mode, mime: info.contentType, filename, sha256, size: u64(bytes.length), width: u64(info.width), height: u64(info.height), data: manifestKey ? new Uint8Array() : bytes, ...(manifestKey ? { manifest: key(manifestKey) } : {}) };
     const createOptions = { expiration: ExpirationTime.atBlock(expiresAt), salt: randomSalt(), flags: { readonly: true } };
-    const stored = await writeWithPolicy(walletClient, { phase: 'finalize' },
+    const stored = await writeWithPolicy(observedWallet, { phase: 'finalize' },
       (unsigned: ChunkingWalletClient) => unsigned.createEntity(ImageSchema, values, createOptions, { gas: 1_000_000n, gasPrice: 1n, nonce: 0 }),
-      (parameters: WriteTransactionParameters) => walletClient.createEntity(ImageSchema, values, createOptions, parameters), transactionHashes, txParams,
+      (parameters: WriteTransactionParameters) => observedWallet.createEntity(ImageSchema, values, createOptions, parameters), transactionHashes, txParams,
       (result: { entityKey: Hex }) => { imageKey = result.entityKey; submitted(imageKey, transactionHashes); });
     return { ...info, imageKey: stored.entityKey, manifestKey, mode: plan.mode, sha256, transactionHashes };
   } catch (cause) {
     if (cause instanceof ChunkingError) {
       manifestKey = cause.manifestKey ?? manifestKey;
-      transactionHashes.push(...cause.transactionHashes.filter(hash => !transactionHashes.includes(hash)));
+      cause.transactionHashes.forEach(rememberHash);
     }
     if (cause instanceof ImageStorageError && !transactionHashes.length) throw cause;
     const pending = cause instanceof WriteConfirmationPendingError || (cause instanceof ChunkingError && cause.code === 'CONFIRMATION_PENDING');

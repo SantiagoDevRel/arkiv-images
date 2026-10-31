@@ -4,7 +4,7 @@ Candidate: **arkiv-images 1.0.0**, SDK **1.0.0**, viem **2.56.3**, exact registr
 
 ## Library and operation tests
 
-Linux ARM64, Node 24.22.1: typecheck, build, syntax/current-guidance lint and **45 tests passed**. Tests exercise actual SDK encoding against a controlled in-memory RPC. They cover PNG/JPEG validation, size/MIME/dimension limits, inline/chunked exact-byte reconstruction, the 25 MiB ceiling, keyset pagination, wrong network, malformed chain IDs, missing/corrupt chunks, root/manifest changes, safe errors and browser-wallet guards.
+Linux ARM64, Node 24.22.1: typecheck, build, syntax/current-guidance lint and **51 tests passed**. Tests exercise actual SDK encoding against a controlled in-memory RPC. They cover PNG/JPEG validation, size/MIME/dimension limits, inline/chunked exact-byte reconstruction, the 25 MiB ceiling, keyset pagination, wrong network, malformed chain IDs, missing/corrupt chunks, root/manifest changes, safe errors and browser-wallet guards.
 
 The persistent operation is the same public API used by the sample. Binding send-count tests passed:
 
@@ -17,6 +17,8 @@ The persistent operation is the same public API used by the sample. Binding send
 | Uncertain transport outcome | 1; another click cannot resend |
 
 An additional test proves asynchronous wallet/date setup starts only after the persistent sending guard is stored. Full decoding and rendered behavior require the separate browser gate; container/unit tests do not certify a browser decoder.
+
+Six regression cases cover SDK errors carrying an uncertain transaction hash at the inline root, second chunk and manifest finalization, with receipt lookups returning null or throwing. The operation retains every observed hash before the lookup, the final error exposes it exactly once, prior manifest recovery remains available, and later clicks reuse the same promise without resending. Images observes only the public wallet `createEntity`/`patchEntity` boundary; chunking 1.1.0 still owns estimates, gas, receipts and retries. The new regressions failed before this correction.
 
 ## Actual Rabdi evidence
 

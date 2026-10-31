@@ -1,7 +1,7 @@
 // Run on the DGX after the live seed has passed. Produces a candidate, never publishes.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import assert from 'node:assert/strict';
 
@@ -22,10 +22,13 @@ assert.ok(live.cases.every(c => c.byteExact === true));
 run(npm, ['pack', '--pack-destination', 'sample']);
 const tarball = join(root, 'sample/arkiv-images-1.0.0.tgz');
 const bytes = await readFile(tarball);
+const integrity = `sha512-${createHash('sha512').update(bytes).digest('base64')}`;
 assert.ok(process.env.TMPDIR, 'Run inside the registered DGX job private TMPDIR.');
 const consumer = join(process.env.TMPDIR, 'images-consumer'); await mkdir(consumer);
 await writeFile(join(consumer, 'package.json'), JSON.stringify({ name: 'images-candidate-consumer', version: '1.0.0', private: true, type: 'module' }));
 run(npm, ['install', '--ignore-scripts', '--no-audit', '--no-fund', tarball, '@arkiv-network/sdk@1.0.0', 'viem@2.56.3'], consumer);
+for (const guide of ['README.md', 'AGENTS.md', 'CLAUDE.md']) await access(join(consumer, 'node_modules/arkiv-images/sample', guide));
+console.log('Sample guides linked by README are present in the clean packed consumer.');
 await writeFile(join(consumer, 'inspect.mjs'), `import assert from 'node:assert/strict';
 import { inspectImage, planImage, VERSION } from 'arkiv-images';
 const bytes = new Uint8Array(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4V+L2HwAG5AK4X5zdSAAAAABJRU5ErkJggg==', 'base64'));
@@ -42,7 +45,13 @@ void [accepts, ImageSchema, VERSION, inspectImage, planImage, MAX_EXPIRATION_BLO
 `);
 run(process.execPath, ['inspect.mjs'], consumer);
 run(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '--noEmit', '--strict', '--skipLibCheck', '--module', 'NodeNext', '--target', 'ES2022', 'types.ts'], consumer);
-run(npm, ['install', '--no-audit', '--no-fund'], join(root, 'sample')); run(npm, ['run', 'build'], join(root, 'sample'));
-const artifact = { name: 'arkiv-images', version: '1.0.0', published: false, sha256: createHash('sha256').update(bytes).digest('hex'), integrity: `sha512-${createHash('sha512').update(bytes).digest('base64')}`, bytes: bytes.length, cleanPackedConsumer: true };
+// Explicitly refresh the local tarball. Plain npm install can retain an older archive
+// with the same name/version from the existing lock and node_modules cache.
+run(npm, ['install', '--no-audit', '--no-fund', 'arkiv-images@file:./arkiv-images-1.0.0.tgz'], join(root, 'sample'));
+const sampleLock = JSON.parse(await readFile('sample/package-lock.json', 'utf8'));
+assert.equal(sampleLock.packages['node_modules/arkiv-images'].integrity, integrity, 'Sample lock must identify this exact candidate.');
+assert.deepEqual(await readFile('sample/node_modules/arkiv-images/dist/index.js'), await readFile('dist/index.js'), 'Sample must build the current candidate, not a cached prior pack.');
+run(npm, ['run', 'build'], join(root, 'sample'));
+const artifact = { name: 'arkiv-images', version: '1.0.0', published: false, sha256: createHash('sha256').update(bytes).digest('hex'), integrity, bytes: bytes.length, cleanPackedConsumer: true };
 await writeFile('candidate-artifact.json', JSON.stringify(artifact, null, 2) + '\n');
 console.log(JSON.stringify(artifact));

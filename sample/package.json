@@ -12,9 +12,9 @@
     "preview": "vite preview --host 127.0.0.1 --port 3082 --strictPort"
   },
   "dependencies": {
-    "arkiv-chunking": "1.1.0",
     "@arkiv-network/sdk": "1.0.0",
-    "arkiv-images": "file:./arkiv-images-1.0.0.tgz",
+    "arkiv-chunking": "1.1.0",
+    "arkiv-images": "file:arkiv-images-1.0.0.tgz",
     "viem": "2.56.3"
   },
   "devDependencies": {

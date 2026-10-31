@@ -229,7 +229,7 @@ el<HTMLFormElement>('upload-form').addEventListener('submit', async event => {
     el('upload-result').hidden = false; status('upload-status','Stored.','success');
   } catch(error) {
     let detail = message(error);
-    if(error instanceof ImageStorageError && error.manifestKey) detail += ` Recovery manifest: ${error.manifestKey}. Confirmed transactions: ${error.transactionHashes.join(', ')}. This is a file key, not an image key.`;
+    if(error instanceof ImageStorageError && error.manifestKey) detail += ` Recovery manifest: ${error.manifestKey}. Observed transactions: ${error.transactionHashes.join(', ')}. This is a file key, not an image key.`;
     if(error instanceof ImageStorageError && !error.manifestKey && error.transactionHashes.length) detail += ` Observed transactions: ${error.transactionHashes.join(', ')}.`;
     if(error instanceof ImageStorageError && error.imageKey) detail += ` Recovery image key: ${error.imageKey}.`;
     detail += ' This operation will not resend on another click. After checking your wallet, choose the file again only if you intend a new upload.';
