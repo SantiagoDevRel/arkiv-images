@@ -22,11 +22,11 @@ const routeRpc=async route=>{
   };
   await route.fulfill({json:Array.isArray(req)?await Promise.all(req.map(response)):await response(req)});
 };
-await context.route('https://rpc.tiramisu.db-chain.testnet.arkiv.network/**',routeRpc);
+await context.route('**/api/rpc',routeRpc);
 await page.exposeFunction('walletRequest',async args=>{
   walletCalls.push(args.method);
   if(args.method==='eth_chainId')return wrongChain?'0x1':activeChain;
-  if(args.method==='wallet_switchEthereumChain'){assert.equal(args.params[0].chainId,'0x7614d1');activeChain=args.params[0].chainId;return null;}
+  if(args.method==='wallet_switchEthereumChain'){assert.equal(args.params[0].chainId,'0x76edaf');activeChain=args.params[0].chainId;return null;}
   if(args.method==='eth_sendTransaction'&&reject)throw Error('rejected');
   return rpc.request(args);
 });
@@ -90,37 +90,37 @@ for(const fixture of [
   await page.waitForFunction(()=>document.querySelector('#read-status').dataset.state==='success');
   await page.waitForFunction(()=>!document.querySelector('#inspection').hidden);delay=0;
   assert.equal(await page.locator('#upload-status').innerText(),'Stored.');
-  assert.equal(await page.locator('.attribute-table tbody tr').count(),filename==='chunked.png'?9:8);
-  assert.equal(await page.locator('#view-entity').getAttribute('href'),`https://indexer.tiramisu.db-chain.testnet.arkiv.network/entity/${await page.locator('#image-key').inputValue()}`);
+  assert.equal(await page.locator('.attribute-table tbody tr').count(),filename==='chunked.png'?11:10);
+  assert.equal(await page.locator('#view-entity').getAttribute('href'),`https://rabdi.explorer.arkiv.network/entity/${await page.locator('#image-key').inputValue()}`);
   if(filename==='chunked.png'){
     assert.equal(await page.locator('#entity-link-list a').count(),4);
-    assert.match(await page.locator('.payload-preview').innerText(),/Empty payload/);
+    assert.match(await page.locator('.data-preview').innerText(),/Empty data/);
     await page.getByRole('button',{name:'Manifest Describes the file'}).click();
-    assert.equal(await page.locator('.attribute-table tbody tr').count(),6);
+    assert.equal(await page.locator('.attribute-table tbody tr').count(),8);
     assert.match(await page.locator('.manifest-json').innerText(),/chunked.png/);
-    await page.getByRole('button',{name:'Chunks 2 ordered payloads'}).click();
+    await page.getByRole('button',{name:'Chunks 2 ordered byte slices'}).click();
     assert.equal(await page.locator('#chunk-select option').count(),2);
-    const firstHex = await page.locator('.payload-preview code').textContent();
+    const firstHex = await page.locator('.data-preview code').textContent();
     assert.deepEqual(Buffer.from(firstHex.replace(/\s/g,''),'hex'),Buffer.from(bytes.slice(0,100000)));
     await page.locator('#chunk-select').selectOption('1');
     assert.match(await page.locator('.byte-range').innerText(),/100,000.*120,000/);
-    assert.equal(await page.locator('.attribute-table tbody tr').count(),3);
-    assert.match(await page.locator('.entity-explorer').getAttribute('href'),/^https:\/\/indexer\.tiramisu\.db-chain\.testnet\.arkiv\.network\/entity\/0x[\da-f]{64}$/);
+    assert.equal(await page.locator('.attribute-table tbody tr').count(),5);
+    assert.match(await page.locator('.entity-explorer').getAttribute('href'),/^https:\/\/rabdi\.explorer\.arkiv\.network\/entity\/0x[\da-f]{64}$/);
     const disclosure=page.getByText('See the inspection query',{exact:true});
     await disclosure.focus();await page.keyboard.press('Enter');
     assert.match(await page.locator('.entity-detail details pre').innerText(),/ownedBy/);
     await page.keyboard.press('Enter');
   }
-  const displayedHex = await page.locator('.payload-preview code').textContent();
-  const expectedPayload = filename==='chunked.png' ? bytes.slice(100000) : bytes;
-  assert.deepEqual(Buffer.from(displayedHex.replace(/\s/g,''),'hex'),Buffer.from(expectedPayload));
+  const displayedHex = await page.locator('.data-preview code').textContent();
+  const expectedData = filename==='chunked.png' ? bytes.slice(100000) : bytes;
+  assert.deepEqual(Buffer.from(displayedHex.replace(/\s/g,''),'hex'),Buffer.from(expectedData));
   assert.equal(displayedHex.includes('\u2026'),false);
-  assert.equal(await page.locator('.payload-preview').getAttribute('tabindex'),'0');
+  assert.equal(await page.locator('.data-preview').getAttribute('tabindex'),'0');
   if(filename==='chunked.png'){
-    const payload=page.locator('.payload-preview');
-    assert.equal(await payload.evaluate(e=>e.scrollHeight>e.clientHeight),true);
-    await payload.focus();await page.keyboard.press('Control+End');
-    await page.waitForFunction(()=>document.querySelector('.payload-preview').scrollTop>0);
+    const data=page.locator('.data-preview');
+    assert.equal(await data.evaluate(e=>e.scrollHeight>e.clientHeight),true);
+    await data.focus();await page.keyboard.press('Control+End');
+    await page.waitForFunction(()=>document.querySelector('.data-preview').scrollTop>0);
   }
   assert.match(await page.locator('#read-status').innerText(),/byte for byte/);
   assert.equal(await page.locator('#recovered').evaluate(img=>img.complete&&img.naturalWidth===320),true);
@@ -152,13 +152,22 @@ assert.equal(await page.locator('#download-result').isVisible(),false);
 await page.screenshot({path:join(output,'read-error.png'),fullPage:true});failRead=false;
 await page.locator('#image-key').fill(`0x${'00'.repeat(32)}`);await page.locator('#retrieve').click();await page.waitForFunction(()=>document.querySelector('#read-status').textContent.includes('Image not found'));
 await page.locator('#store-tab').click();
+await page.locator('#file').setInputFiles({name:'invalid-date.png',mimeType:'image/png',buffer:Buffer.from(png())});
+await page.waitForFunction(()=>document.querySelector('#file-info').dataset.state==='success');
 const validDate=await page.locator('#expiration').inputValue();
 await page.locator('#expiration').fill('2020-01-01T12:00');
 const beforeDateFailure=rpc.transactions.length;
 await page.locator('#upload').click();await page.waitForFunction(()=>document.querySelector('#upload-status').textContent.includes('future'));
 assert.equal(rpc.transactions.length,beforeDateFailure);await page.locator('#expiration').fill(validDate);
+await page.locator('#file').setInputFiles({name:'rejected.png',mimeType:'image/png',buffer:Buffer.from(png())});
+await page.waitForFunction(()=>document.querySelector('#file-info').dataset.state==='success');
 reject=true;await page.locator('#upload').click();await page.waitForFunction(()=>document.querySelector('#upload-status').dataset.state==='error');
 assert.equal(await page.locator('#upload-result').isVisible(),false);reject=false;
+const beforeNewClick = walletCalls.filter(method=>method==='eth_sendTransaction').length;
+await page.locator('#upload').click();await page.waitForFunction(()=>document.querySelector('#upload-status').dataset.state==='error');
+assert.equal(walletCalls.filter(method=>method==='eth_sendTransaction').length,beforeNewClick,'New click after uncertainty never resends');
+await page.locator('#file').setInputFiles({name:'wrong-network.png',mimeType:'image/png',buffer:Buffer.from(png())});
+await page.waitForFunction(()=>document.querySelector('#file-info').dataset.state==='success');
 wrongChain=true;await page.locator('#upload').click();await page.waitForFunction(()=>document.querySelector('#upload-status').textContent.includes('Reconnect'));wrongChain=false;
 await page.reload();await page.locator('#retrieve-tab').click();await page.locator('#image-key').fill(results[0].imageKey);await page.locator('#retrieve').click();await page.waitForFunction(()=>document.querySelector('#read-status').dataset.state==='success');
 assert.equal(await page.locator('#read-status').innerText(),'Image bytes verified.');
@@ -175,7 +184,7 @@ try {
   await settings.goto('chrome://settings/appearance',{waitUntil:'domcontentloaded'});
   await settings.getByRole('combobox',{name:'Mode',exact:true}).selectOption({label:'Dark'});
   await settings.getByRole('combobox',{name:'Page zoom',exact:true}).selectOption({label:'200%'});
-  await nativeContext.route('https://rpc.tiramisu.db-chain.testnet.arkiv.network/**',routeRpc);
+  await nativeContext.route('**/api/rpc',routeRpc);
   const nativePage=await nativeContext.newPage();
   await nativePage.goto(process.env.SAMPLE_URL??'http://127.0.0.1:3082');
   await nativePage.locator('#retrieve-tab').click();

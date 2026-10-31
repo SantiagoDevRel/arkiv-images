@@ -23,8 +23,8 @@ test('date adapter uses live network cadence and rounds up without assuming two-
 test('date adapter enforces transaction-dependent minimum and maximum without clamping', () => {
   assert.throws(() => dateToBlocks(future(64), timing, 40, now), ExpirationInputError);
   assert.equal(dateToBlocks(future(144), timing, 40, now), 72);
-  assert.equal(dateToBlocks(future(15_768_000 * 2), timing, 2, now), 15_768_000);
-  assert.throws(() => dateToBlocks(future(15_768_000 * 2 + 1), timing, 2, now), /earlier/);
+  assert.equal(dateToBlocks(future(7_883_970 * 2), timing, 2, now), 7_883_970);
+  assert.throws(() => dateToBlocks(future(7_883_970 * 2 + 1), timing, 2, now), /earlier/);
   for (const count of [0, -1, 1.5, NaN, 267]) {
     assert.throws(() => dateToBlocks(future(3600), timing, count, now), /upload plan/);
   }

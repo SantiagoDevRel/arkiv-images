@@ -1,230 +1,126 @@
 # arkiv-images
 
-Store a public PNG or JPEG as queryable Arkiv entities, then retrieve and display its original bytes. Small images use one entity. Larger images use the existing `arkiv-chunking` package: a discoverable image entity points to a file manifest, which links the ordered chunks. Retrieval checks size, format, dimensions and SHA-256 before returning the bytes.
+Store a public PNG or JPEG as queryable Arkiv entities, then retrieve its original bytes with size, MIME, dimensions and SHA-256 checks. Small images use one entity with a non-indexed `bytes()` column. Larger images use `arkiv-chunking`: an image entity references a file manifest and ordered immutable chunks.
 
-**These packages are intended for testnet use.**
+**1.0.0 is a candidate, pending verification and publication. Intended for Rabdi testnet only.** The published release remains separate from this source candidate. See [verification](docs/verification.md) for actual results and blockers.
 
-Version **0.1.2** adds SDK **0.8.1** support and depends on `arkiv-chunking` **0.1.1**. The immutable [0.1.1 archive](https://www.npmjs.com/package/arkiv-images/v/0.1.1) uses SDK 0.8.0 and chunking 0.1.0. Check both registry versions before installing; see [verification](docs/verification.md) for source checks and dated evidence.
+## Install and inspect
 
-## Install and inspect an image
-
-ESM, Node **22.10+** with Web Crypto, or a current browser on HTTPS/localhost. The candidate is tested with SDK **0.8.1**, viem **2.56.3**, `arkiv-chunking` **0.1.1**, Node **22.22.3**. Its SDK peer range is `>=0.8.1 <0.9`; other releases in that range and other runtimes are untested.
-
-Build and pack the chunking candidate first, then this package. Install both resulting tarballs in a clean consumer:
+ESM, Node 22.10+ with Web Crypto, or a browser on HTTPS/localhost. Candidate dependencies: SDK 1.0.0, viem 2.56.3, arkiv-chunking 1.1.0. Install the packed candidate until 1.0.0 is published:
 
 ```sh
 mkdir image-consumer
 cd image-consumer
 npm init -y
 npm pkg set type=module
-npm install --save-exact /absolute/path/to/arkiv-chunking-0.1.1.tgz /absolute/path/to/arkiv-images-0.1.2.tgz @arkiv-network/sdk@0.8.1 viem@2.56.3
+npm install /absolute/path/arkiv-images-1.0.0.tgz @arkiv-network/sdk@1.0.0 viem@2.56.3
 ```
 
-Create `inspect.mjs`:
+Save `inspect.mjs`:
 
 ```js
 import { inspectImage, planImage } from 'arkiv-images';
-
-// Synthetic 1x1 PNG, no personal image or credentials.
 const bytes = new Uint8Array(Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4V+L2HwAG5AK4X5zdSAAAAABJRU5ErkJggg==', 'base64'));
 console.log(inspectImage(bytes));
 console.log(planImage(bytes.length));
 ```
 
-```sh
-node inspect.mjs
-```
+`node inspect.mjs` returns PNG, 1 × 1, 70 bytes, inline mode, one entity and one transaction. Inspection is local and needs no wallet, access key or network. Base64 embeds this example only; stored content is binary.
 
-Expected: PNG, width `1`, height `1`, byte length `70`; mode `inline`, `entityCount: 1`, `transactionCount: 1`. This inspection is local: no wallet, RPC, funds or access key. Base64 is used only to embed this tiny example; the package stores binary bytes without base64 overhead.
+## Rabdi round trip
 
-## Store and retrieve on Tiramisu
+Rabdi is a DB-Chain testnet, chain ID **7794095**. Obtain your own [access key](https://hub.arkiv.network/access-keys) and [test funds](https://hub.arkiv.network/faucet). Configure a dedicated test wallet locally, outside source control; never send its private key in chat. Missing access keys fail closed with `MissingAccessKeyError`.
 
-Use **Tiramisu testnet, chain ID 7738577**, exported by `@arkiv-network/sdk/chains`. [Network connection details](https://stage.hub.arkiv.network/networks), [test GLM faucet](https://stage.hub.arkiv.network/faucet) and [access keys](https://stage.hub.arkiv.network/api-keys) are provided by the Hub staging environment, verified on 2026-09-08. The production Hub still showed retired Braga at verification time. The faucet and access-key pages require connecting/signing in with your own wallet; follow their on-screen verification and cooldown requirements. No faucet claim or new access-key issuance was needed or tested in this run. The RPC used below allows anonymous reads; write access and quotas depend on the provider. A provider access key does not replace a signing wallet. Never put an administrative provider key in a browser.
-
-The [sample](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/README.md) uses **MetaMask or Rabby** to sign with the visitor's own wallet. No shared server signer or private key is needed. For a Node integration, configure a dedicated test wallet key **locally**, outside the checkout. Do not send private keys to an agent or put them in chat.
-
-In the consumer above, save `roundtrip.mjs`:
+Save `roundtrip.mjs` in the consumer:
 
 ```js
+import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { createPublicClient, createWalletClient } from '@arkiv-network/sdk';
-import { tiramisu } from '@arkiv-network/sdk/chains';
+import { createPublicClient, createWalletClient, MissingAccessKeyError } from '@arkiv-network/sdk';
+import { rabdi } from '@arkiv-network/sdk/chains';
 import { http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { inspectImage, planImage, storeImage, retrieveImage } from 'arkiv-images';
 
-if (!process.env.ARKIV_PRIVATE_KEY) throw new Error('Configure ARKIV_PRIVATE_KEY locally.');
-const bytes = new Uint8Array(await readFile('example.png'));
-console.log(inspectImage(bytes), planImage(bytes.length));
-const transport = () => http(process.env.ARKIV_RPC_URL ?? tiramisu.rpcUrls.default.http[0], {
+if (!process.env.ARKIV_ACCESS_KEY) throw new MissingAccessKeyError('Rabdi');
+if (!process.env.ARKIV_PRIVATE_KEY) throw Error('Configure a dedicated test wallet locally.');
+const chain = rabdi({ accessKey: process.env.ARKIV_ACCESS_KEY });
+const transport = () => http(chain.rpcUrls.default.http[0], {
   retryCount: 0, timeout: 30_000, fetchOptions: { cache: 'no-store' },
 });
-const publicClient = createPublicClient({ chain: tiramisu, transport: transport() });
-const walletClient = createWalletClient({ chain: tiramisu, transport: transport(),
+const publicClient = createPublicClient({ chain, transport: transport() });
+const walletClient = createWalletClient({ chain, transport: transport(),
   account: privateKeyToAccount(process.env.ARKIV_PRIVATE_KEY) });
-const saved = await storeImage({ publicClient, walletClient, bytes, filename: 'example.png',
-  expirationBlocks: 43_200 });
-const image = await retrieveImage({ publicClient, imageKey: saved.imageKey,
-  expectedSha256: saved.sha256 });
-const identical = image.bytes.length === bytes.length && bytes.every((b,i) => b === image.bytes[i]);
-if (!identical) throw new Error('Image bytes differ');
-console.log({ imageKey: saved.imageKey, sha256: image.sha256, mode: image.mode,
-  bytes: image.bytes.length, identical, expiresAt: String(image.expiresAt) });
+const bytes = new Uint8Array(await readFile('example.png'));
+console.log(inspectImage(bytes), planImage(bytes.length));
+const stored = await storeImage({ publicClient, walletClient, bytes,
+  filename: 'example.png', expirationBlocks: 3600 });
+const recovered = await retrieveImage({ publicClient, imageKey: stored.imageKey,
+  expectedSha256: stored.sha256 });
+assert.deepEqual(recovered.bytes, bytes);
+console.log({ imageKey: stored.imageKey, byteExact: true });
 ```
 
-Place a **non-sensitive PNG** at `example.png`. Then run:
-
-```sh
-node --env-file=/absolute/path/to/your-local-secret.env roundtrip.mjs
-```
-
-The local secret file uses ordinary `NAME=value` entries for `ARKIV_PRIVATE_KEY` and optionally `ARKIV_RPC_URL`. Supply your own values; no secrets are included here. If those variables already exist in the process environment, use `node roundtrip.mjs`.
-
-Expected: a new 32-byte `imageKey`, SHA-256, the selected storage mode, byte count, `identical: true` and a queried expiration block. Writes spend **test GLM**. Keep the returned image key for retrieval after restarting. A read needs only `publicClient` and `imageKey`, not the wallet. To display the recovered bytes in a browser:
-
-```js
-const image = await retrieveImage({ publicClient, imageKey });
-const blob = new Blob([new Uint8Array(image.bytes)], { type: image.contentType });
-const bitmap = await createImageBitmap(blob); // full browser decode; may reject corrupt pixels
-bitmap.close();
-const url = URL.createObjectURL(blob);
-document.querySelector('img').src = url;
-// When replacing the image or unmounting: URL.revokeObjectURL(url).
-```
-
-## Read an existing image without a wallet
-
-In the same clean consumer, save `read.mjs`:
-
-```js
-import { writeFile } from 'node:fs/promises';
-import { createPublicClient } from '@arkiv-network/sdk';
-import { tiramisu } from '@arkiv-network/sdk/chains';
-import { http } from 'viem';
-import { retrieveImage } from 'arkiv-images';
-
-const publicClient = createPublicClient({ chain: tiramisu,
-  transport: http(tiramisu.rpcUrls.default.http[0], { retryCount: 0 }) });
-const image = await retrieveImage({ publicClient, imageKey: process.argv[2] });
-// Use a fixed local output path, not the untrusted stored filename.
-const output = image.contentType === 'image/png' ? 'recovered.png' : 'recovered.jpg';
-await writeFile(output, image.bytes, { flag: 'wx' });
-console.log({ output, bytes: image.byteLength, sha256: image.sha256 });
-```
-
-Run `node read.mjs YOUR_IMAGE_ENTITY_KEY` with a key returned by a completed upload. Expected: a recovered image file and its byte count/digest. No signing wallet, funds or private key are needed. The output uses exclusive creation: if it already exists, choose another filename rather than silently overwriting it. Entities in the verification evidence can expire, so they are evidence, not permanent fixtures.
-
-## Data model and queries
-
-| Location | Contents |
-|---|---|
-| Image entity attributes | `type: str('arkiv-images/v1')`, `mode: str('inline'|'chunked')`, `mime: str(...)`, `filename: str(...)`, `sha256: bytes32(...)`, `size/width/height: u64(...)`; chunked mode adds `manifest: key(...)` |
-| Inline payload | Original PNG/JPEG binary bytes; content type `image/png` or `image/jpeg` |
-| Chunked image payload | Empty; the `manifest` attribute links to the file, rather than pretending the image is contained in this one payload |
-| File manifest and chunks | The versioned `arkiv-chunking@0.1.0` format; the dependency owns splitting, sequencing, snapshot pagination, completion and integrity checks |
-
-The image entity is created read-only. Filenames are public, indexed attributes; the package does not infer author/version from the image. Queries operate on attributes, never image pixels or payload contents. To discover PNG images:
-
-```js
-import { str } from '@arkiv-network/sdk/attr';
-import { eq } from '@arkiv-network/sdk/query';
-import { IMAGE_TYPE, retrieveImage } from 'arkiv-images';
-
-const query = publicClient.select({ key: true })
-  .where(eq('type', str(IMAGE_TYPE)), eq('mime', str('image/png')))
-  .limit(200);
-for await (const entity of query) {
-  // Narrow by owner or another indexed attribute for a real application.
-  // A single image's retrieval does not enumerate the global catalogue.
-  const image = await retrieveImage({ publicClient, imageKey: entity.key });
-  console.log(entity.key, image.byteLength);
-}
-```
-
-SDK types matter: `u64(2)` is different from `i32(2)`. The actual query expression for this example is `type = str('arkiv-images/v1') AND mime = str('image/png')`, not SQL `SELECT *`.
+Run `node roundtrip.mjs` after configuring those environment variables locally. All original bytes, filename, metadata and wallet addresses are public, including EXIF/GPS. Use synthetic or non-sensitive images. There is no encryption, metadata stripping, resizing, recompression or read authorization. Entity Expiration removes data from current queries; it does not erase history or copies.
 
 ## Public API
 
-All functions and TypeScript types are exported from `arkiv-images`. Do not import internal build paths.
-
 | Export | Contract |
 |---|---|
-| `inspectImage(bytes, expectedContentType?)` | Returns `ImageInfo`: detected MIME, width, height, byteLength. Validates size, signature and basic container structure; not a full pixel decoder. No network. |
-| `planImage(byteLength)` | Returns `ImagePlan`: inline/chunked mode, bytes, chunk/entity/transaction counts. No network. |
-| `storeImage(options)` | Resolves `StoredImage` after observed confirmations: imageKey, optional manifestKey, digest, dimensions, size, mode, transactionHashes. Required clients, bytes, filename, expirationBlocks; optional contentType/onProgress. |
-| `retrieveImage(options)` | Resolves `RetrievedImage`: original bytes, filename, MIME, dimensions, digest, mode, queried expiresAt. Required publicClient/imageKey; optional expectedSha256/onProgress. Never returns a partial image. |
-| `ImageStorageError`, `ChunkingError` | Typed error codes. Upload errors preserve available manifestKey and confirmed transactionHashes. Raw `cause` is for local diagnostics and may contain provider secrets: never render or log it in the UI. |
-| Types | `ImageInfo`, `ImagePlan`, `StoreImageOptions`, `StoredImage`, `RetrieveImageOptions`, `RetrievedImage`, `ImageContentType`, `ImageErrorCode`, `Progress` |
-| Constants | `VERSION`, `IMAGE_TYPE`, `INLINE_MAX_BYTES`, `MAX_IMAGE_BYTES`, `MAX_IMAGE_PIXELS` |
+| `inspectImage(bytes, expectedContentType?)` | Size, static PNG/JPEG container, MIME and dimensions; no network or complete pixel decode. |
+| `planImage(byteLength)` | Inline/chunked mode and measured entity/transaction count. No network. |
+| `storeImage(options)` | Requires matching Rabdi public/wallet clients, bytes, basename, explicit `expirationBlocks`; optional content type, progress and per-write `txParams` policy. Returns imageKey, optional manifestKey, sha256, mode, dimensions and observed transaction hashes. |
+| `createImageWriteOperation(optionsOrAsyncSetup)` | Create once per intentional upload and keep across UI renders/clicks. `run()` sets sending before setup/network calls and returns the same promise forever, including failed, uncertain or pending outcomes. Read-only state, imageKey and transactionHashes support recovery. |
+| `retrieveImage(options)` | Public client, **image** key, optional independently trusted SHA-256 and progress. Returns original bytes, metadata, mode and earliest observed expiration. |
+| `ImageSchema`, `IMAGE_TYPE` | SDK 1.0 named schema `arkiv-images/v2`. Binary `data` is stored without an index. Indexed type/mode/mime/sha256/manifest support discovery. Filename, size and dimensions are stored typed columns. |
+| `ImageStorageError`, `ChunkingError` | Safe code/message; preserve imageKey/manifestKey and transactionHashes on failure. Raw causes can include provider details: never display or log them. |
+| `TransactionParameterPolicy`, `Progress` | Public TypeScript integration types re-exported from chunking. |
+| `VERSION`, `INLINE_MAX_BYTES`, `MAX_IMAGE_BYTES`, `MAX_IMAGE_PIXELS`, `MAX_EXPIRATION_BLOCKS`, `RABDI_MAX_LIFETIME_BLOCKS`, `EXPIRATION_INCLUSION_MARGIN_BLOCKS` | Package version and enforced limits. |
 
-`onProgress` is the chunk dependency's observational callback: phase `manifest`, `chunks` or `finalize`, completed/total and optional manifestKey. Its total counts **file chunks**, not the final image entity transaction. Inline writes do not emit chunk progress. Only a resolved `storeImage` means the whole upload finished; callback exceptions cannot change a confirmed upload into a failure.
+Import types such as `ImageInfo`, `ImagePlan`, `StoreImageOptions`, `StoredImage`, `RetrieveImageOptions`, `RetrievedImage`, `ImageContentType` and `ImageErrorCode` directly from `arkiv-images`.
 
-## Limits, visibility and failure semantics
+Limits: **120,000 bytes** inline; **25 MiB** per image; **40,000,000 pixels**. Chunking uses 100,000-byte slices. Larger files require N+3 transactions for N chunks. `planImage` computes this count. These are package admission limits, not a promise of every node's transaction budget.
 
-| Policy | Value |
-|---|---|
-| Formats | Static PNG; baseline/progressive JPEG. No SVG, GIF, APNG, WebP, HEIC, PDF or video |
-| Maximum file | **26,214,400 bytes (25 MiB)**, measured before upload; in memory, no streaming |
-| Maximum dimensions | Positive width/height, product at most **40,000,000 pixels** |
-| Inline image | **1–120,000 bytes**, one entity and one transaction |
-| Chunked image | **120,001–26,214,400 bytes**, 100,000-byte chunks; N+2 entities, N+3 confirmed transactions |
-| At 120,001 bytes | 2 chunks + manifest + image entity: 4 entities, 5 transactions |
-| At 1,000,000 bytes | 10 chunks + manifest + image entity: 12 entities, 13 transactions |
-| At 25 MiB | 263 chunks, 265 entities, 266 transactions; this is a policy ceiling, not a claim that uploading this size is quick or economical |
-| Filename | Basename only, 1–128 UTF-8 bytes (SDK `str` attribute limit), no path separators or control characters |
-| Expiration | Explicit whole blocks: `max(64, transactionCount + 32)` through 15,768,000 |
+Entity Expiration is whole blocks, at least `max(64, transactionCount + 32)` and at most **7,883,970**, leaving 30 blocks below Rabdi's 7,884,000-block maximum. There is no unlimited lifetime. Longer storage requires coordinated Lifetime Extension outside this API. The image root and manifest use the same absolute deadline; retrieval rejects independent deadline changes. Root existence alone does not guarantee availability of every chunk.
 
-The inline threshold leaves room for attributes and transaction framing. The commonly cited 131,072-byte payload ceiling is **not** an image budget: the complete transaction also has a size limit. [Verification](docs/verification.md) records actual encoded sizes and which boundaries were submitted on Tiramisu. JPEG/PNG are already compressed image formats; converting to PDF or base64 does not remove the storage constraint. A photo's size varies with dimensions, detail and encoding; the sample measures the selected file rather than guessing from megapixels.
+## Signing and recovery
 
-**No encryption, metadata stripping, resizing or recompression.** The tool preserves the exact original bytes, including EXIF/GPS, embedded thumbnails and names. Everyone with read access to the public network can retrieve them. Use synthetic/non-sensitive images. Expiration removes entities from current queries; it does **not** erase historical bytes or copies. This tool offers no read authorization and does not claim confidentiality.
+Every part and the final root reuse the public `arkiv-chunking` write policy: an unsigned SDK request is estimated at `latest`; gas is at least `max(1_000_000, 2 × estimate)`, with explicit network gasPrice and a fresh latest nonce. The image API additionally stops before signing if that budget exceeds half the latest block gas limit. Longer expiration can substantially increase gas, so shorten Entity Expiration or choose a smaller image if the estimate exceeds that budget. Admitted byte/lifetime limits do not guarantee every combination fits the network's gas budget. `txParams` can increase gas or change fees; it cannot remove required headroom or override the latest nonce. Wallet account/network are checked before every signature.
 
-The package performs bounded container checks, not a complete PNG CRC/JPEG entropy decode, antivirus scan or content moderation. A file can pass header checks and still fail full decoding. JPEGs must end at their end-of-image marker; files with trailing padding are rejected even if some decoders accept them. Export such files as a standard JPEG before uploading. The sample calls `createImageBitmap` both before writes and after retrieval. Consumers rendering images must also handle decode failures. Never serve uploaded bytes as HTML or SVG, and never trust a filename as markup.
+Serialize writes from the same account. A retry is permitted only once after an authoritative gas-exhausted reverted receipt and only within the half-block gas ceiling. Successful or uncertain writes are never automatically resent. `CONFIRMATION_PENDING` preserves SDK-success hashes and root/manifest keys if a later receipt lookup is unresolved or disagrees. The operation records submitted before that lookup. Browser consumers must keep a `createImageWriteOperation` object across renders and later clicks; `storeImage` is a one-call convenience for an intentional new upload. Inspect preserved receipts before explicitly creating another operation. The sample resets the operation only when you choose a file again. Other failures can also leave confirmed entities. There is no multi-transaction atomicity, rollback, resumable upload, independent part mutation/transfer/extension or automatic cleanup.
 
-Chunking is required only for images above the inline threshold and is **reused, not reimplemented**. The dependency is installed with the package. An inline read uses one entity query plus the chain check. A chunked read first loads the image entity, then the file manifest and every required chunk page; it is one JavaScript API call, **not one RPC query**. File pages share the manifest's snapshot block. The initial image query and file query are separate snapshots. A trusted `expectedSha256` pins bytes independently of mutable manifests; a digest proves integrity, not the publisher's identity.
+Retrieval uses latest-state keyset pages and verifies immutable chunks, owner/creator, sequence, lengths, metadata and digest; the manifest is rechecked before return. It does not claim a historical snapshot. An independently trusted digest pins bytes, not the publisher's identity. Missing/corrupt chunks never return a partial image.
 
-Parts receive relative expiration at their own creation. The manifest is older than the final image entity and can expire first. The root may therefore still exist when the file can no longer be retrieved; retrieval fails clearly. `RetrievedImage.expiresAt` is the earlier queried root/manifest expiration, not a fixed-time availability promise. Do not independently extend, transfer or change parts; these are not supported workflows.
-
-No multi-transaction atomicity, automatic write retries/resume, deduplication, deletion or rollback. If the final image transaction fails, confirmed file entities remain: preserve `manifestKey` and receipts, inspect them, then decide whether to start a new upload. A timeout can follow a successful transaction; the returned list includes only confirmations observed by this call. Serialize writes from the same account. In browser integrations recheck account/network before **every** signing request; the sample provides the implementation.
+The package checks containers, not full PNG CRC/JPEG entropy decoding or malware. Browser consumers must fully decode before upload and after retrieval, render only PNG/JPEG as images, treat filenames as text, handle decode failure and revoke Blob URLs. JPEG must end at its end-of-image marker; trailing padding is rejected.
 
 ## Troubleshooting
 
-`retrieveImage` can throw either `ImageStorageError` or the exported `ChunkingError`; chunk failures are not members of `ImageErrorCode`. Handle both classes and use their safe `code`/`message` fields. Do not log the raw error or `cause`, which can contain provider secrets.
-
-| Symptom | Resolution |
+| Symptom | Action |
 |---|---|
-| `INVALID_IMAGE` / browser decode error | Use a valid static PNG or baseline/progressive JPEG within the pixel limit. Changing an extension does not convert a file. |
-| `TOO_LARGE` | Choose a smaller file. The tool does not silently resize it. |
-| `INVALID_INPUT` | Check 32-byte key/hash, filename rules and whole-block expiration. |
-| `NETWORK_MISMATCH` | Configure matching explicit testnet clients; the sample supports only Tiramisu. Check RPC `eth_chainId` too. |
-| Wallet missing, rejected or changed | Enable/connect MetaMask or Rabby; resolve pending requests. Reconnect after changing account and inspect confirmed writes before retrying. |
-| Not enough GLM | Obtain test GLM for the actual signing account on Tiramisu; plan the number of transaction approvals before uploading a large photo. |
-| RPC 401/403/429, `READ_FAILED` | Check your network-specific provider access key/quota/connection. Never retry ambiguous writes automatically. |
-| `NOT_FOUND` | Verify the **image** key and network; entity may have expired. A chunk manifest key is a different type. |
-| `INCOMPLETE_UPLOAD`, `MISSING_CHUNK` | Inspect upload receipts and expiration. Partial images are not returned. |
-| `INVALID_ENTITY`, `INVALID_MANIFEST`, `INVALID_CHUNK`, `HASH_MISMATCH` | Treat the result as invalid; do not bypass checks. A manifest may have changed or content may be damaged. |
-| npm E404 | Check the publication status in verification; do not call a local tarball published. |
-| CommonJS import failure | Use ESM `import`; there is no CommonJS export. |
+| `MissingAccessKeyError`, HTTP 401/403/429 | Configure your own network access key; check provider quota. The sample keeps its read key server-side. |
+| `arkiv serves state at the chain head only` | Use `latest` for state reads, nonce and unsigned estimates; historical block hashes, safe/finalized state are unsupported. |
+| Revert with gasUsed equal to gas limit | Use explicit gas with at least twice the latest estimate. The public policy owns the bounded retry; do not resend an uncertain write. |
+| `INVALID_INPUT`, `NETWORK_MISMATCH` | Check Rabdi, whole-block lifetime, filename and 32-byte key/digest. |
+| `INVALID_IMAGE`, `TOO_LARGE`, browser decode error | Choose a valid static PNG/JPEG within limits. Changing an extension does not convert it. |
+| `NOT_FOUND`, `MISSING_CHUNK`, `INCOMPLETE_UPLOAD` | Check the image key, network, referenced parts and expiration; a manifest key is a different key type. |
+| `INVALID_ENTITY`, `INVALID_MANIFEST`, `INVALID_CHUNK`, `HASH_MISMATCH` | Do not bypass integrity checks or display partial content. |
+| `CONFIRMATION_PENDING`, `UPLOAD_FAILED` | Preserve recovery keys/hashes. Inspect receipts and the wallet before a new upload. |
 
-## Sample, agent guides and development
+## Sample and development
 
-- [Live sample](https://arkiv-images-example.vercel.app), consuming `arkiv-images@0.1.1` from npm. [Deployment verification](docs/sample-review-v3.md) distinguishes real Tiramisu reads from controlled wallet tests.
-- Listed in the Hub as [ARKIV-STORE-IMAGES](https://stage.hub.arkiv.network/tools#tool-arkiv-store-images). The npm package name remains `arkiv-images`.
-- [Sample README](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/README.md): source checkout, localhost commands and visitor-wallet flow.
-- [Consumer AGENTS.md](AGENTS.md) and [sample AGENTS.md](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/AGENTS.md). Give these guides to your agent explicitly. It will not necessarily read files under `node_modules` automatically. Each CLAUDE.md points to the corresponding AGENTS.md.
-- [Verification](docs/verification.md): exact runtimes, dependency versions, simulated vs real checks, publication and unresolved gates.
+The [sample README](sample/README.md) explains the existing `arkiv-images-example` project, preview status and visitor-wallet setup. Reads use its own bounded `/api/rpc` endpoint and a server-side `ARKIV_ACCESS_KEY`; the visitor configures their own wallet RPC. No server signer. Candidate previews consume the packed candidate; registry releases must be verified separately.
+
+Give consumer agents [AGENTS.md](AGENTS.md) and [sample/AGENTS.md](sample/AGENTS.md) explicitly. The corresponding CLAUDE.md files only import those guides.
 
 ```sh
-git clone --branch feat/image-storage https://github.com/SantiagoDevRel/arkiv-images.git
-cd arkiv-images
 npm ci
-npm test
 npm run typecheck
-npm pack --pack-destination /absolute/path/to/output
+npm run lint
+npm test
+npm pack
 ```
 
-For an unpublished candidate only, replace the npm package argument in a clean consumer with the absolute `.tgz` path. This tests the packed artifact, not registry publication. There are no runtime aliases to sibling repositories.
+Tests distinguish controlled RPC, live Rabdi, packed installs and npm publication in [verification](docs/verification.md). Seed synthetic data with `node scripts/seed-rabdi.mjs` after build and local key configuration; it discovers matching live entities and never retries unresolved journal entries. Keep `.seed-rabdi-state.json` private and persistent between runs.
 
-Browser regression checks use Playwright with a locally installed Chrome. First start the sample dev server in another terminal, then run `npm run test:browser` from the package root. They exercise the actual SDK/package with a controlled RPC and injected wallet, not live funds. Screenshots and results default to `~/Downloads/arkiv-image-storage-98/browser`; set `ARTIFACTS_DIR` to another output directory or `SAMPLE_URL` to another localhost port. These checks are separate from `npm test`.
-
-Provenance: image workflow and PNG/JPEG/25 MiB policy from [Arkiv-Network/usecases-imagedb](https://github.com/Arkiv-Network/usecases-imagedb); public-byte/metadata cautions and transaction budget from the existing Arkiv Cookbook; chunk implementation is the separately published `arkiv-chunking` dependency. The old service's quotas, shared signer and RPC protocol are not added to this package. Test RPC harness and sample token treatments are adapted from arkiv-chunking, with Arkiv UI's documented open font fallbacks.
+Breaking format changes are in [CHANGELOG.md](CHANGELOG.md). Historical evidence under docs stays dated; it is not validation of this candidate.

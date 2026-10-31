@@ -1,9 +1,12 @@
 /*
 !/package.json
 !/package-lock.json
+!/arkiv-images-1.0.0.tgz
 !/tsconfig.json
 !/index.html
 !/vercel.json
+!/api
+!/api/**
 !/src
 !/src/**
 !/public

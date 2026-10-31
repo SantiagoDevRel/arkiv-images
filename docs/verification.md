@@ -1,102 +1,44 @@
-# Verification: arkiv-images
+# Rabdi candidate verification
 
-## SDK 0.8.1 candidate — 2026-10-06
+Candidate: **arkiv-images 1.0.0**, SDK **1.0.0**, viem **2.56.3**, exact registry **arkiv-chunking 1.1.0**. This source candidate is not an npm publication or production deployment. Review approval is required before either.
 
-The unpublished **0.1.2** candidate uses SDK **0.8.1**, viem **2.56.3**, the **arkiv-chunking 0.1.1** candidate and Node **22.22.3**. Typecheck and all 29 existing tests passed against these dependencies, including exact-byte PNG/JPEG retrieval and a 25 MiB image across the 200-entity page boundary. RPC storage and wallet responses were controlled fixtures, not funded writes.
+## Library and operation tests
 
-Three new tests reproduced malformed wallet chain IDs passing the package preflight: a decimal string, number or array was coerced to the expected ID. The guard now requires a hexadecimal string and rejects each before any transaction. These tests use actual SDK clients with a controlled provider.
+Linux ARM64, Node 24.22.1: typecheck, build, syntax/current-guidance lint and **45 tests passed**. Tests exercise actual SDK encoding against a controlled in-memory RPC. They cover PNG/JPEG validation, size/MIME/dimension limits, inline/chunked exact-byte reconstruction, the 25 MiB ceiling, keyset pagination, wrong network, malformed chain IDs, missing/corrupt chunks, root/manifest changes, safe errors and browser-wallet guards.
 
-The shared SDK 0.8.1 Tiramisu suite passed **12/12 cases with 40 confirmed transactions in total across chunking and images** on 2026-10-06. Four synthetic PNG/JPEG rasters completed inline/chunked store and exact-byte retrieval, then decoded before and after readback in Chrome **154.0.8037.58**. The shared suite also covered the 120,001-byte/empty file roundtrips and 201-part, two-page retrieval. The executed 0.1.2 images and 0.1.1 chunking modules match the locally packed candidates. [Sanitized cases, digests, dimensions and confirmed receipts](sdk-0.8.1-evidence.json).
+The persistent operation is the same public API used by the sample. Binding send-count tests passed:
 
-Local validations and controlled corruption/post-receipt SDK-result-loss cases are labeled separately; no deployed app, extension-wallet signing, actual expiry or full durable upload continuation is certified here. The SDK peer is `>=0.8.1 <0.9`; other versions in that range are untested. Publish and verify chunking 0.1.1 before releasing images; local tarball tests do not prove registry availability. The current npm release remains 0.1.1. The historical sections below keep their original versions and network evidence.
-
-## Historical 0.1.1 verification
-
-Latest sample revision: [dark/light themes, full payloads, explorer links, deployment and independent reviews](sample-review-v3.md). The sample is now live at https://arkiv-images-example.vercel.app. That report supersedes the historical interface and undeployed-status descriptions below; the published package implementation is unchanged.
-
-## Previous sample revision: calendar and entity inspector
-
-The current sample replaces the earlier settings/consent interface described in the historical sections below. It consumes the unchanged published `arkiv-images@0.1.1`; the sample itself is source code, not a new npm release or a deployed demo.
-
-- Both Claude Design and Lovable produced inspected prototypes and downloaded source exports; [design provenance](design.md#reference-based-revision) records their project links and artifact hashes. The reference at localhost:3077 was opened and attached to both briefs.
-- Wallet connection is in the top bar and automatically requests Tiramisu. Calendar/time is converted using current SDK block timing; stale timing, past dates and an insufficient transaction budget are rejected before signing. RPC input, separate network-switch action and public-data acknowledgement are absent.
-- Retrieval shows actual root/manifest/chunk keys, typed attributes, payload sizes and byte previews, ordered byte ranges and executable inspection queries. Inspection uses one snapshot and validates against the already verified package result. It cannot substitute for package retrieval or cause unverified image bytes to be displayed.
-- `npm test`: **29 passing tests** (13 package, 7 calendar, 6 inspection, 3 wallet). Package type checking and sample build pass. Browser regression passes three byte-exact roundtrips with seven controlled transactions, automatic network switching, calendar rejection with zero writes, entity selection, keyboard tabs/disclosures and the previously documented error cases.
-- Rendered widths: **390, 599, 600, 601, 768, 899, 900, 901 and 1440 CSS pixels**, including both sides of the 600/900 breakpoints. Font-load/computed-style and overflow assertions pass. Native Chrome zoom at **200%** also passes. Empty, loading, read failure, inline and chunked states were inspected. The fixed brand theme remains light under a dark browser preference.
-- A new real **2,977-byte JPEG** was stored through the redesigned interface with Rabby/Arkiv Wallet on Tiramisu, then automatically retrieved, decoded and compared byte for byte. The successful receipt, zero native-token value, signer, date input, entity key and SHA-256 are recorded in [sample-v2-evidence.json](sample-v2-evidence.json). The requested local time was September 9 at 18:42; the subsequent live estimate was 18:43, illustrating that calendar expiration is approximate.
-- Existing real inline and two-chunk images were queried again through the inspector. The chunked image contains four entities: image root, manifest and two payload chunks (100,000 and 20,001 bytes). This revision did not repeat the five real chunked write transactions; their original receipt evidence remains below.
-
-The environment/version table below still applies. Real MetaMask signing, physical mobile wallets, other browsers/networks and a live 25 MiB upload remain unverified. Local preview remains at `http://127.0.0.1:3082/`; no public sample deployment has been performed.
-
-Clean revision check: a fresh clone of implementation commit `93ea4a5` ran the sample's documented `npm ci` and `npm run build` with the registry dependency tree (`arkiv-images@0.1.1`, SDK 0.8.0, viem 2.56.3). Its isolated browser at the documented alternate port retrieved the new JPEG and existing 120,001-byte chunked PNG from real Tiramisu, rendered their inspectors and downloaded exact original bytes without a wallet or page errors. Claude's follow-up directly viewed three responsive success captures and the store-to-retrieve loading capture; it closed all findings with no blockers. The independent checklist review confirmed the seven requested interface changes.
-
-Verification date: 2026-09-08. Version 0.1.1 corrects the Tiramisu setup links from the production Hub (still serving retired Braga) to the verified Hub staging pages. The storage implementation is unchanged from 0.1.0; only its exported version changes. Real writes below were made with 0.1.0, and the same entities were read again with 0.1.1. This report distinguishes real Tiramisu transactions, controlled RPC tests and release gates. The npm archive contains the verification snapshot taken before publication; the [source report](https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/docs/verification.md) records subsequent registry installation evidence.
-
-## Tested combination
-
-| Component | Actually tested |
+| Outcome | Sends for the same operation |
 |---|---|
-| Node / npm | 22.22.3 / 10.9.8 |
-| TypeScript | 5.9.3; public consumer types compiled with strict NodeNext, without skipLibCheck |
-| Arkiv SDK / viem | 0.8.0 / 2.56.3 |
-| Chunk dependency | arkiv-chunking 0.1.0 from npm registry |
-| Sample tooling | Vite 8.2.2 |
-| Network | Tiramisu, RPC-confirmed chain ID 7738577 |
-| Live signer | Rabby, explicitly authorized Arkiv Wallet; address in the receipt evidence |
-| Browser automation | Playwright 1.62.1, Google Chrome 152.0.7977.77; native pixel decoding |
+| Authoritative non-gas revert | 1 |
+| Authoritative gas-exhausted revert | 2, with doubled/re-estimated gas inside the half-block ceiling |
+| SDK success then disagreeing receipt | 1; submitted hash preserved before lookup |
+| SDK success then null receipt, followed by another click | 1; the same rejected promise and recovery keys remain |
+| Uncertain transport outcome | 1; another click cannot resend |
 
-Other SDK versions, networks, Firefox/Safari, mobile wallet browsers and a real MetaMask extension signing flow are not claimed tested. MetaMask-compatible EIP-1193 requests and EIP-6963 discovery were exercised with an injected test wallet; Rabby performed the real writes.
+An additional test proves asynchronous wallet/date setup starts only after the persistent sending guard is stored. Full decoding and rendered behavior require the separate browser gate; container/unit tests do not certify a browser decoder.
 
-## Real network, original bytes verified
+## Actual Rabdi evidence
 
-[Machine-readable receipts and image keys](testnet-evidence.json) include SHA-256, creation blocks, queried expiration, gas, calldata and signed transaction sizes. `node scripts/verify-network.mjs` reads Tiramisu again, compares the recovered bytes with the synthetic source fixtures, and checks all receipts, signer, target, zero native-token value and chain. It performs no writes and will fail when the temporary entities expire.
+[rabdi-evidence.json](rabdi-evidence.json) contains four live cases and authoritative successful receipts:
 
-| Synthetic image | Flow | Confirmed transactions | Largest signed transaction |
-|---|---|---|---|
-| PNG, 120,000 bytes, 320 × 200 | Inline write → query → render → byte equality | 1 | 122,418 bytes |
-| PNG, 120,001 bytes, 320 × 200 | Manifest + 2 chunks + finalize + image entity → reconstruction → render → byte equality | 5 | 101,458 bytes |
-| JPEG, 2,977 bytes, 320 × 200 | Inline write → query → render → byte equality | 1 | 5,424 bytes |
+| Format | Storage | Original bytes | Expiration used |
+|---|---|---:|---|
+| PNG | Inline | 120,000 | 3,600 blocks |
+| PNG | Chunked | 120,001 | 3,600 blocks |
+| JPEG | Inline | 2,977 | Maximum admitted 7,883,970 blocks, less inclusion delay |
+| JPEG | Chunked | 130,001 | 3,600 blocks |
 
-An independent Node reader verified the same original bytes, digests and transaction receipts. Real RPC tests also confirmed missing image (`NOT_FOUND`) and configured-network mismatch (`NETWORK_MISMATCH`). Test GLM was spent only on Tiramisu. No personal photo or private credential is part of the fixtures or published files.
+Each original/retrieved byte array was compared exactly and its digest verified. Every receipt status was successful; every transaction had gas at least twice measured usage and no more than half the 30,000,000 head gas limit. Across 12 confirmed writes, maximum gasUsed was **4,851,921** and maximum submitted gas was **9,783,200**. A second complete seed run returned the same image keys and transaction hashes without another write. Both runs used the dedicated image test wallet; no funder signing.
 
-## Controlled regression checks
+The largest image tested live is 130,001 bytes. The 25 MiB maximum was tested against controlled RPC, not submitted to Rabdi. The large synthetic samples expire soon; rerun the idempotent seed after expiration or a network reset. A root key alone is not a promise of availability.
 
-`npm test`: 13 passing tests with the actual SDK encoder/query decoder and a controlled RPC. Coverage includes validation, threshold planning, inline and chunked byte equality, JPEG, a maximum-length 128-byte filename, rejected writes, wrong chain, absent image, corrupted bytes/metadata, missing chunks and preserved manifest/receipts when final image creation fails. The full 25 MiB roundtrip exercises 263 chunks, 266 transactions and pagination beyond 200 entities. **25 MiB is simulated, not a live-network upload claim.**
+Long expiration materially affects estimates: unsigned 120,000/100,000/70,000-byte maximum-lifetime probes estimated 18,539,745 / 15,508,335 / 10,961,427 gas. Their doubled budgets exceeded the admission ceiling and were rejected before signing. The gate was preserved; large live cases used a shorter lifetime, while the small JPEG verified a maximum-lifetime create.
 
-`npm run typecheck` and the sample's `npm run build` pass. No lint command exists in this repository.
+## Artifacts and sample gate
 
-`npm run test:browser`: isolated browser context, injected wallet and controlled RPC, real SDK/package and pixel decoder. PNG inline, JPEG and chunked PNG upload/retrieve/download pass; download bytes match. Reload-and-read works without the original file or connected wallet. Empty, loading, missing-entity, RPC failure, rejected-signature, wrong-chain and invalid-file states were exercised.
+`node scripts/verify-candidate.mjs` requires live evidence, runs the library gates, packs the publication allowlist, installs that exact tarball in a clean consumer, runs the exact README inspection example and public TypeScript imports, refreshes the sample lock from the registry and builds the sample. Its artifact report records SHA-256/SHA-512 and distinguishes a packed candidate from a registry release. The sample pins chunking 1.1.0 directly and consumes the packed image candidate.
 
-Rendered widths: 390, 599, 600, 601, 768 and 1440 CSS pixels. DOM checks found no horizontal page overflow; computed typography and font loading matched the documented contract. Screenshots at 390/768/1440 also show the real-network JPEG result. Reflow passed both CSS zoom and **native Chrome page zoom at 200%**, set through browser settings in an isolated temporary profile. CDP confirmed browser zoom 2, CSS zoom 1, no page overflow and a decoded image; screenshots use device layout coordinates to avoid a Chrome/Playwright clipping mismatch at native zoom. Keyboard navigation reaches wallet controls and opens/closes the settings disclosure with Enter. A physical touch device has not been tested. Screenshots are local artifacts, not a deployed demo.
+The preview uses the existing arkiv-images-example project. Read access is through its bounded server-side endpoint with a server-only access key; browser writes use the visitor's configured Rabdi wallet. Hydrated preview validation and its deployment ID are recorded in the PR's validation report. Live browser retrieval, local input/decode failures and controlled wallet/operation tests are different checks; neither replaces the other. No npm publish, production deploy, tag, merge or release belongs to this candidate review.
 
-## Consumer and audit gates
-
-A fresh agent with only the package/sample READMEs, consumer guides and an integration objective installed the packed candidate in a new directory. It ran the exact minimal example, compiled every public type against actual SDK clients, and read the real 120,000-byte image from Tiramisu without a wallet. Invalid format, excessive size, invalid/missing key, unexpected digest and wrong network failed as documented. No blocking documentation gaps were found; its suggestion of a complete anonymous-read example was incorporated.
-
-Version 0.1.0 was published at 2026-09-08T22:09:43Z with SHA-1 78aa4b0593dd4c9a03f0aebe350fb12e37a9b08d. A second clean directory installed it from npm, verified the registry lockfile, compiled every public type with strict TypeScript, executed both documented examples and retrieved both real inline/chunked PNGs without a wallet. The sample also passed npm ci and build from that registry version. All consumer guides were present in the installed package.
-
-Claude completed its source/security/logic/browser review after resuming a timed-out session. It independently retrieved all three live images and confirmed the recorded byte equality. It identified stale sample dependency contents and missing publication as release blockers. Both closed: a follow-up independently hashed the published tarball and served JavaScript, confirmed the 128-byte filename gate, and reported no code blockers. Full resolution table: docs/claude-review.md in the source repository.
-
-The 0.1.1 archive contains this pre-publication snapshot. Its registry install and final checkout evidence will be added to the source report after publication. Setup destinations were inspected as rendered pages: staging /networks shows Tiramisu 7738577 and the correct RPC, /api-keys offers Tiramisu keys, and /faucet requires connecting/signing in with a wallet. No new key or faucet claim was performed. Production /api-keys returned 404 and /networks still showed Braga; this is why 0.1.1 changes those links.
-
-## Final registry checks
-
-Version **0.1.1** is published at 2026-09-08T22:18:33.078Z. The registry tarball SHA-1 is `aa60aab4e5694a30de55e1e01c87415559aae435`; its SHA-512 integrity was independently recalculated and matches the sample lockfile. See [release evidence](release-evidence.json). The npm archive contains the pre-publication snapshot above and retains a 0.1.0 report heading from the baseline; its package manifest and README identify 0.1.1 correctly. This source report corrects that heading and is the final post-publication evidence.
-
-A fresh agent installed **0.1.1 from npm** in another new directory, verified registry URL/integrity and shipped guides, ran the exact README examples, compiled all public types with strict TypeScript (without skipLibCheck), and independently verified SHA-256 for both real inline and chunked PNGs. No documentation blockers, wallet actions or network writes. The sample now pins 0.1.1 with a registry lockfile; its build and all browser regression cases passed again. The browser test explicitly checks the displayed installed version. A fresh real-network JPEG read in the final sample rendered successfully at 390/768/1440, with no page overflow.
-
-Claude independently corroborated the staging links, npm publication and unchanged storage code in 0.1.1. No code blockers remained; the source report heading is corrected here.
-
-## Final English interface
-
-The [Claude Design export](design.md) is integrated with the real sample. All controls, statuses, errors and guides are English. After a separate Claude copy review, the page uses one storage-settings disclosure, keeps SHA-256 under verification details and removes repeated idle/next-step prose. Essential limits, public metadata consent and the measured transaction count remain visible before signing. The empty page contains 106 visible words in the inspected Rabby browser; wording count can vary with wallet discovery/state. No essential instruction depends on a hover-only tooltip.
-
-The final copy passed the sample build, all three controlled browser roundtrips, six widths, keyboard disclosures and native 200% zoom. A fresh real-network JPEG read in this English interface displayed package v0.1.1 and decoded at 390/768/1440 with no page overflow. Grok was also requested for the copy review, but its service returned an out-of-usage error; no Grok review is claimed.
-
-Measured contrast: field border against its background 4.75:1, primary button text 7.01:1, help text 11.17:1. These probes cover those roles, not a blanket accessibility certification.
-
-After [PR #2](https://github.com/SantiagoDevRel/arkiv-images/pull/2) merged, the documented default branch `feat/image-storage` at `0b27dfa` was verified in a separate clean checkout: `npm ci`, `npm run build`, `npm run dev -- --port 3099`, English DOM and official wordmark, then a wallet-free real Tiramisu JPEG retrieval and byte-exact 2,977-byte download. The separate port avoids the running developer preview. The lockfile resolves arkiv-images 0.1.1 from npm, not a local alias. Claude independently checked GitHub's remote default files and closed its source-availability finding; no remaining blockers from its review.
-
-## Preview and scope
-
-The sample is available locally at http://127.0.0.1:3082 for developer review before deployment. No public demo deployment is claimed. The Arkiv Hub catalogue entry remains pending because its live-demo prerequisite cannot be met until that review/deploy step. No encryption, PDFs, new skills, MCP integration, scaffolding or unrelated Hub changes were added.
+Historical dated evidence remains under docs and is not validation of this release. The previous chunking 1.0.0 public-export failure was resolved by the separately published 1.1.0; no private dependency import, copied gas policy or relaxed acceptance rule was used.

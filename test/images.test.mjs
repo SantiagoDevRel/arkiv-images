@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createPublicClient, createWalletClient } from '@arkiv-network/sdk';
-import { tiramisu } from '@arkiv-network/sdk/chains';
+import { rabdi } from '@arkiv-network/sdk/chains';
 import { custom } from 'viem';
 import { inspectImage, planImage, storeImage, retrieveImage, MAX_IMAGE_BYTES, INLINE_MAX_BYTES } from '../dist/index.js';
 import { rpcHarness, TEST_ACCOUNT } from './rpc-harness.mjs';
 import { png } from './fixtures.mjs';
 function clients(rpc = rpcHarness()) {
-  const publicClient = createPublicClient({ chain: tiramisu, transport: custom(rpc, { retryCount: 0 }) });
-  const walletClient = createWalletClient({ chain: tiramisu, account: TEST_ACCOUNT, transport: custom(rpc, { retryCount: 0 }), pollingInterval: 1 });
+  const publicClient = createPublicClient({ chain: rabdi({ accessKey: 'example-test' }), transport: custom(rpc, { retryCount: 0 }) });
+  const walletClient = createWalletClient({ chain: rabdi({ accessKey: 'example-test' }), account: TEST_ACCOUNT, transport: custom(rpc, { retryCount: 0 }), pollingInterval: 1 });
   return { publicClient, walletClient, rpc };
 }
 test('inspect known PNG and reject unsupported, empty, truncated, mismatched MIME, huge dimensions and oversized bytes', () => {
@@ -52,12 +52,12 @@ test('not found, provider failure and corrupted inline data fail closed', async 
   await assert.rejects(retrieveImage({ ...c, imageKey: `0x${'00'.repeat(32)}` }), { code: 'NOT_FOUND' });
   await assert.rejects(retrieveImage({ ...c, publicClient: { ...c.publicClient, getChainId: async () => { throw Error('private RPC details'); } }, imageKey: `0x${'00'.repeat(32)}` }), { code: 'READ_FAILED' });
   const saved = await storeImage({ ...c, bytes: png(), filename: 'x.png', expirationBlocks: 1000 });
-  c.rpc.entities[0].payload = c.rpc.entities[0].payload.replace('49444154', '49444155');
+  const data = c.rpc.entities[0].attributes.find(a => a.name === 'data'); data.value = data.value.replace('49444154', '49444155');
   await assert.rejects(retrieveImage({ ...c, imageKey: saved.imageKey }), { code: 'INVALID_IMAGE' });
 });
 test('failed image-root write preserves confirmed chunk manifest and receipts', async () => {
   const c = clients(); let creates = 0;
-  const walletClient = { ...c.walletClient, createEntity: async args => { if (++creates === 4) throw Error('rejected root'); return c.walletClient.createEntity(args); } };
+  const walletClient = { ...c.walletClient, createEntity: async (...args) => { if (++creates === 4) throw Error('rejected root'); return c.walletClient.createEntity(...args); } };
   await assert.rejects(storeImage({ ...c, walletClient, bytes: png(120001), filename: 'x.png', expirationBlocks: 1000 }), error => error.code === 'UPLOAD_FAILED' && Boolean(error.manifestKey) && error.transactionHashes.length === 4);
 });
 test('JPEG bytes and dimensions survive the real SDK roundtrip', async () => {
@@ -66,7 +66,7 @@ test('JPEG bytes and dimensions survive the real SDK roundtrip', async () => {
   const saved=await storeImage({...c,bytes,filename:'public.jpg',contentType:'image/jpeg',expirationBlocks:1000});
   assert.deepEqual((await retrieveImage({...c,imageKey:saved.imageKey})).bytes,bytes);
 });
-test('longest filename and maximum inline payload fit complete transaction budget', async () => {
+test('longest filename and maximum inline binary-data fit complete transaction budget', async () => {
   const c=clients();await storeImage({...c,bytes:png(120000),filename:'a'.repeat(124)+'.png',expirationBlocks:1000});
   assert.ok(c.rpc.transactions[0].calldataBytes+400<131072);
   console.log('maximum-inline-filename-calldata',c.rpc.transactions[0].calldataBytes);
@@ -79,11 +79,11 @@ test('missing chunk and mutated root metadata never return partial bytes', async
   c.rpc.entities.at(-1).attributes.find(a=>a.name==='mime').value='image/svg+xml';
   await assert.rejects(retrieveImage({...c,imageKey:saved.imageKey}),{code:'INVALID_ENTITY'});
 });
-test('25 MiB policy ceiling reconstructs across the 200-entity page boundary', async () => {
+test('25 MiB policy ceiling reconstructs across the keyset page boundary', async () => {
   const c=clients(),bytes=png(MAX_IMAGE_BYTES);
   const saved=await storeImage({...c,bytes,filename:'maximum.png',expirationBlocks:3600});
   const result=await retrieveImage({...c,imageKey:saved.imageKey,expectedSha256:saved.sha256});
   assert.deepEqual(result.bytes,bytes);assert.equal(saved.transactionHashes.length,266);
-  assert.ok(c.rpc.requests.some(r=>r.method==='arkiv_query'&&r.params[1].cursor));
+  assert.ok(c.rpc.requests.some(r=>r.method==='arkiv_query'&&r.params[0].includes('$key >')));
   assert.ok(c.rpc.transactions.every(t=>t.calldataBytes<122880));
 });

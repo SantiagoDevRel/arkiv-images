@@ -30,17 +30,17 @@ export function renderInspection(container: HTMLElement, report: ImageEntityInsp
     link.setAttribute('aria-label', `View ${name.toLowerCase()} in block explorer`);
     panel.append(key, link, node('p', purpose, 'help'));
     if (range) panel.append(node('p', range, 'byte-range'));
-    const payloadTitle = node('h4', `Payload · ${number(entity.payload.length)} bytes`);
-    const payload = node('pre', undefined, 'payload-preview');
-    payload.tabIndex = 0;
-    payload.setAttribute('role', 'region');
-    payload.setAttribute('aria-label', `Complete ${name.toLowerCase()} payload in hexadecimal`);
-    const code = node('code', entity.payload.length
-      ? Array.from(entity.payload, v => v.toString(16).padStart(2, '0')).join(' ')
-      : 'Empty payload');
-    payload.append(code); panel.append(payloadTitle, payload);
-    if (entity === report.manifest) panel.append(node('p', new TextDecoder().decode(entity.payload), 'manifest-json'));
-    panel.append(node('h4', 'Attributes · indexed for queries'));
+    const dataTitle = node('h4', `Stored bytes · ${number(entity.data.length)} bytes`);
+    const data = node('pre', undefined, 'data-preview');
+    data.tabIndex = 0;
+    data.setAttribute('role', 'region');
+    data.setAttribute('aria-label', `Complete ${name.toLowerCase()} data in hexadecimal`);
+    const code = node('code', entity.data.length
+      ? Array.from(entity.data, v => v.toString(16).padStart(2, '0')).join(' ')
+      : 'Empty data');
+    data.append(code); panel.append(dataTitle, data);
+    if (entity === report.manifest) panel.append(node('p', new TextDecoder().decode(entity.data), 'manifest-json'));
+    panel.append(node('h4', 'Typed attributes · indexing follows the schema'));
     const table = node('table'); table.className = 'attribute-table';
     const head = node('thead'), headings = node('tr');
     for (const label of ['Name', 'Type', 'Value']) { const th = node('th', label); th.scope = 'col'; headings.append(th); }
@@ -48,13 +48,16 @@ export function renderInspection(container: HTMLElement, report: ImageEntityInsp
     const body = node('tbody');
     for (const attribute of entity.attributes) {
       const row = node('tr');
-      row.append(node('td', attribute.name), node('td', attribute.type), node('td', String(attribute.value)));
+      const value = attribute.type === 'bytes' && typeof attribute.value === 'string'
+        ? `${number((attribute.value.length - 2) / 2)} bytes`
+        : String(attribute.value);
+      row.append(node('td', attribute.name), node('td', attribute.type), node('td', value));
       body.append(row);
     }
     table.append(body); panel.append(table);
     const details = node('details'), summary = node('summary', 'See the inspection query');
     const queryCode = node('pre'); queryCode.append(node('code', query));
-    details.append(summary, node('p', 'Filters use attributes; payload bytes are returned as data.', 'help'), queryCode);
+    details.append(summary, node('p', 'Only indexed columns filter queries; bytes columns are stored without an index.', 'help'), queryCode);
     panel.append(details);
   }
   function stage(label: string, detail: string, callback: () => void) {
@@ -66,16 +69,16 @@ export function renderInspection(container: HTMLElement, report: ImageEntityInsp
     });
     buttons.push(button); flow.append(button); return button;
   }
-  stage('Image entity', report.manifest ? 'Points to manifest' : 'Contains image bytes', () => show(report.root, 'Image entity', report.manifest ? 'The image bytes live in chunks. This entity links to their manifest.' : 'The payload is the complete original image.', report.queries.root));
+  stage('Image entity', report.manifest ? 'Points to manifest' : 'Contains image bytes', () => show(report.root, 'Image entity', report.manifest ? 'The image bytes live in chunks. This entity links to their manifest.' : 'The data is the complete original image.', report.queries.root));
   if (report.manifest) {
-    stage('Manifest', 'Describes the file', () => show(report.manifest!, 'File manifest', 'JSON filename and format in the payload; chunk count and integrity data in attributes.', report.queries.manifest!));
+    stage('Manifest', 'Describes the file', () => show(report.manifest!, 'File manifest', 'Filename and format in the metadata bytes column; chunk count and digest in typed columns.', report.queries.manifest!));
     const showChunk = () => {
       const chunk = report.chunks[Number(select.value)];
       show(chunk, `Chunk ${chunk.seq + 1} of ${report.chunks.length}`, 'A binary slice of the image. The seq attribute determines its position.', report.queries.chunks!, `Bytes ${number(chunk.byteStart)}–${number(chunk.byteEndExclusive - 1)} · zero-based`);
     };
-    stage('Chunks', `${report.chunks.length} ordered payloads`, showChunk);
+    stage('Chunks', `${report.chunks.length} ordered byte slices`, showChunk);
     select.setAttribute('aria-label', 'Choose a chunk entity');
-    report.chunks.forEach((chunk, index) => select.add(new Option(`Chunk ${index + 1} · ${number(chunk.payload.length)} bytes`, String(index))));
+    report.chunks.forEach((chunk, index) => select.add(new Option(`Chunk ${index + 1} · ${number(chunk.data.length)} bytes`, String(index))));
     select.addEventListener('change', showChunk);
   }
   const complete = node('div', undefined, 'entity-stage verified-stage');
@@ -83,7 +86,7 @@ export function renderInspection(container: HTMLElement, report: ImageEntityInsp
   flow.append(complete); container.append(flow, select, panel);
   const explanation = report.manifest
     ? `Chunks are ordered by seq, then joined into ${number(report.totalBytes)} bytes. The resulting SHA-256 matches the verified image.`
-    : 'The payload bytes match the verified image. No chunk assembly is needed.';
+    : 'The data bytes match the verified image. No chunk assembly is needed.';
   container.append(node('p', explanation, 'help'));
   buttons[0].click();
 }

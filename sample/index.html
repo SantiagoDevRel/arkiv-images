@@ -20,7 +20,7 @@
         <span id="version" class="version"></span>
       </div>
       <div class="wallet-bar">
-        <span class="net">Tiramisu testnet</span>
+        <span class="net">Rabdi testnet</span>
         <label for="wallet" class="sr-only">Wallet</label>
         <select id="wallet"><option value="">Looking for wallets…</option></select>
         <button id="connect" type="button" class="btn btn-connect">Connect wallet</button>
@@ -63,13 +63,14 @@
           <p id="approval-note" class="hint"></p>
           <p id="upload-status" class="hint" role="status" aria-live="polite"></p>
 
-          <p class="panel-foot"><a href="https://stage.hub.arkiv.network/faucet" target="_blank" rel="noopener noreferrer">Get testnet funds &#8599;</a></p>
+          <p class="panel-foot"><a href="https://hub.arkiv.network/faucet" target="_blank" rel="noopener noreferrer">Get testnet funds &#8599;</a></p>
         </form>
 
         <form id="read-form" role="tabpanel" aria-labelledby="retrieve-tab" hidden>
           <label for="image-key">Image key</label>
           <input id="image-key" type="text" required spellcheck="false" autocomplete="off" placeholder="0x…" aria-describedby="key-help" />
           <p id="key-help" class="hint">No wallet needed to retrieve.</p>
+          <button id="load-sample" type="button" class="btn btn-secondary" disabled>Load a public sample</button>
           <button id="retrieve" type="submit" class="btn btn-primary btn-block">
             <span>Retrieve image</span><span class="btn-glyph" aria-hidden="true">&#8599;</span>
           </button>
@@ -127,7 +128,7 @@
 
     <footer class="site-foot">
       <p>These packages are intended for testnet use.</p>
-      <p><a href="https://github.com/SantiagoDevRel/arkiv-images#readme">Package docs &#8599;</a> &middot; <a href="https://github.com/SantiagoDevRel/arkiv-images/blob/feat/image-storage/sample/AGENTS.md">Agent guide</a></p>
+      <p><a href="https://github.com/SantiagoDevRel/arkiv-images/tree/rabdi/sdk-1.0-20261030#readme">Package docs &#8599;</a> &middot; <a href="https://github.com/SantiagoDevRel/arkiv-images/blob/rabdi/sdk-1.0-20261030/sample/AGENTS.md">Agent guide</a></p>
     </footer>
   </main>
 
