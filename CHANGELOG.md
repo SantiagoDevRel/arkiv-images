@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+- Depends on arkiv-chunking 1.1.2 for the corrected shared write policy, which preserves an uncertain submission hash without resending.
+
 ## 1.0.2
 
 - Use the long-lived JPEG example, filter expired examples by current block, align VERSION guidance and verify archives using package.json.

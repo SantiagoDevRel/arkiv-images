@@ -40,14 +40,14 @@ for (const [phase, failAt, size] of [['inline root', 1, undefined], ['second chu
       operation = createImageWriteOperation({ publicClient, walletClient, bytes: png(size), filename: 'public.png', expirationBlocks: 3600 });
       const first = operation.run();
       let failure;
-      await assert.rejects(first, error => { failure = error; return error.code === 'UPLOAD_FAILED'; });
+      await assert.rejects(first, error => { failure = error; return error.code === 'CONFIRMATION_PENDING'; });
       const expected = rpc.transactions.map(tx => tx.hash);
       assert.ok(uncertainHash);
       assert.deepEqual(beforeLookup, expected, 'Every observed hash, including the uncertain write, must be retained before consulting its receipt');
       assert.deepEqual(failure.transactionHashes, expected, 'The returned error must retain the uncertain hash exactly once');
       assert.deepEqual(operation.transactionHashes, expected);
       if (size) assert.equal(failure.manifestKey, rpc.entities[0].key);
-      assert.equal(operation.state, 'uncertain');
+      assert.equal(operation.state, 'submitted');
       assert.equal(operation.run(), first, 'A later click cannot start another send');
       await operation.run().catch(() => {});
       assert.equal(sends, failAt);

@@ -1,4 +1,4 @@
-# Verify arkiv-images 1.0.2
+# Verify arkiv-images 1.0.3
 
 Use Node 22.10+ on the DGX. From this checkout run `npm ci --no-audit --no-fund`, then `node scripts/verify-candidate.mjs`. The script reads package.json, runs library gates, packs that exact version, installs it in a private clean consumer, checks runtime VERSION and public TypeScript imports, and builds an isolated copy of the sample using the same archive. It preserves the sample registry pin and lockfile.
 
@@ -6,7 +6,7 @@ To check a registry installation of the same version, run `node scripts/verify-c
 
 The public example selects the longer-lived inline JPEG `0x2989bda8bbadfe7e22a0b1e3a435aa3b266106adbbca3f97c162ee4eccca8488` and filters entries using the current block. The short-lived PNG and chunked examples in the old measurements have expired; those measurements are not an availability promise.
 
-> Historical 1.0.0 measurements and procedure below are preserved from 51f4905; use the current procedure above for 1.0.2.
+> Historical 1.0.0 measurements and procedure below are preserved from 51f4905; use the current procedure above for 1.0.3.
 
 # Rabdi release verification
 
