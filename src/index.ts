@@ -4,7 +4,7 @@ import { eq } from '@arkiv-network/sdk/query';
 import { uploadFile, downloadFile, hashFile, ChunkingError, DEFAULT_CHUNK_BYTES, MAX_EXPIRATION_BLOCKS, writeWithPolicy, WriteConfirmationPendingError, type TransactionParameterPolicy, type WriteTransactionParameters, type ChunkingPublicClient, type ChunkingWalletClient, type Progress } from 'arkiv-chunking';
 import { hexToBytes, type Hex } from 'viem';
 
-export const VERSION = '1.0.2';
+export const VERSION = '1.0.3';
 export const IMAGE_TYPE = 'arkiv-images/v2';
 type Stored<T extends TypeTag> = Column<T, false, false, false>;
 type Indexed<T extends TypeTag> = Column<T, true, false, false>;
@@ -212,13 +212,18 @@ async function executeStoreImage(options: StoreImageOptions, submitted: (key: He
       (result: { entityKey: Hex }) => { imageKey = result.entityKey; submitted(imageKey, transactionHashes); });
     return { ...info, imageKey: stored.entityKey, manifestKey, mode: plan.mode, sha256, transactionHashes };
   } catch (cause) {
+    // The shared policy can recover a submission hash from a wrapped SDK error.
+    // Retain that typed pending evidence without treating it as a successful receipt.
+    if (cause instanceof WriteConfirmationPendingError || (cause instanceof ChunkingError && cause.code === 'CONFIRMATION_PENDING')) {
+      if (hex32(cause.txHash)) rememberHash(cause.txHash);
+    }
     if (cause instanceof ChunkingError) {
       manifestKey = cause.manifestKey ?? manifestKey;
       cause.transactionHashes.forEach(rememberHash);
     }
     if (cause instanceof ImageStorageError && !transactionHashes.length) throw cause;
     const pending = cause instanceof WriteConfirmationPendingError || (cause instanceof ChunkingError && cause.code === 'CONFIRMATION_PENDING');
-    throw new ImageStorageError(pending ? 'CONFIRMATION_PENDING' : 'UPLOAD_FAILED', pending ? 'The SDK reported a successful write, but receipt confirmation is pending. Preserve the image/manifest keys and hashes; inspect them using reads and never resend automatically.' : 'Upload did not complete. Inspect the wallet and available transaction receipts before retrying; any previously written entities remain.', { cause, manifestKey, imageKey, transactionHashes });
+    throw new ImageStorageError(pending ? 'CONFIRMATION_PENDING' : 'UPLOAD_FAILED', pending ? 'A submitted write has unresolved receipt confirmation. Preserve the image/manifest keys and hashes; inspect them using reads and never resend automatically.' : 'Upload did not complete. Inspect the wallet and available transaction receipts before retrying; any previously written entities remain.', { cause, manifestKey, imageKey, transactionHashes });
   }
 }
 function attr(attributes: Record<string, unknown>, name: string, type: string): unknown {
