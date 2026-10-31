@@ -109,7 +109,7 @@ The package checks containers, not full PNG CRC/JPEG entropy decoding or malware
 
 ## Sample and development
 
-The [sample README](sample/README.md) explains the existing `arkiv-images-example` project and visitor-wallet setup. Reads use its own bounded `/api/rpc` endpoint and a server-side `ARKIV_ACCESS_KEY`; the visitor configures their own wallet RPC. No server signer. The sample pins the released registry package `arkiv-images@1.0.0`.
+The [sample README](sample/README.md) explains the existing `arkiv-images-example` project and visitor-wallet setup. Reads use its own bounded `/api/rpc` endpoint and a server-side `ARKIV_ACCESS_KEY`; the visitor configures their own wallet RPC. No server signer. The sample pins the released registry package `arkiv-images@1.0.2`.
 
 Give consumer agents [AGENTS.md](AGENTS.md) and [sample/AGENTS.md](sample/AGENTS.md) explicitly. The corresponding CLAUDE.md files only import those guides.
 

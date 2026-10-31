@@ -1,6 +1,6 @@
 # Image sample — Rabdi
 
-This sample uses the registry release **arkiv-images 1.0.0** and keeps the image picker, local-date Entity Expiration, byte verification, download, entity inspector, dark/light themes and wallet selection. All copy is English. It targets the existing **arkiv-images-example** Vercel project at https://arkiv-images-example.vercel.app.
+This sample uses the registry release **arkiv-images 1.0.2** and keeps the image picker, local-date Entity Expiration, byte verification, download, entity inspector, dark/light themes and wallet selection. All copy is English. It targets the existing **arkiv-images-example** Vercel project at https://arkiv-images-example.vercel.app.
 
 The UI uses the package public API. Reads go through its own bounded `/api/rpc` function with server-only `ARKIV_ACCESS_KEY`. Only chain ID, current block number, block timing and bounded image/chunk queries are accepted; no signer, access key, upstream URL or raw provider error is sent to the browser. Root and manifest reads are latest state; chunks use keyset pages. Set a free [Hub access key](https://hub.arkiv.network/access-keys) in the Vercel preview environment.
 
@@ -15,7 +15,7 @@ npm ci
 npm run build
 ```
 
-The sample pins `arkiv-images` to exact registry version `1.0.0`; its lock verifies the published archive integrity. No local tarball is used or uploaded. Deploy the sample folder to the existing linked project; its publication allowlist includes the application source and API function.
+The sample pins `arkiv-images` to exact registry version `1.0.2`; its lock verifies the published archive integrity. No local tarball is used or uploaded. Deploy the sample folder to the existing linked project; its publication allowlist includes the application source and API function.
 
 The Vite development server alone does not serve Vercel functions. Use a Vercel preview for the complete real-network read flow; controlled browser tests route `/api/rpc` to the in-memory harness. Never put an access key in Vite environment variables.
 
