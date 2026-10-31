@@ -1,3 +1,5 @@
+> Historical evidence for an earlier release. It is not current SDK 1.0/Rabdi guidance or evidence of the pending 1.0.2 patch. Use the root README and AGENTS.md for the published 1.0.1 baseline and the phase-1 changes.
+
 # Claude review — 2026-09-08
 
 ## Current sample: Claude Design + Lovable revision

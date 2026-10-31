@@ -1,3 +1,5 @@
+> Historical evidence for an earlier release. It is not current SDK 1.0/Rabdi guidance or evidence of the pending 1.0.2 patch. Use the root README and AGENTS.md for the published 1.0.1 baseline and the phase-1 changes.
+
 # Sample design provenance
 
 The sample interface was produced in [Claude Design: Arkiv Images dApp](https://claude.ai/design/p/803e8fb8-05be-472f-9948-c10ac7a41c5a), with the account's existing **Arkiv Design System** selected. The exported HTML and CSS were integrated into `sample/index.html` and `sample/src/style.css`. The design project may require the owner's account; the complete runnable interface is in this repository and requires no design-service access.

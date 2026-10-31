@@ -10,7 +10,7 @@ async function walk(dir) {
   }
 }
 for (const dir of ['src', 'scripts', 'sample/src', 'sample/api', 'test']) await walk(dir);
-const obsolete = /Tiramisu|7738577|@arkiv-network\/sdk\/attr|permanent\(\)|\bpayload\b|\bTTL\b|\bBTL\b|time-to-live/;
+const obsolete = /Tiramisu|7738577|@arkiv-network\/sdk\/attr|permanent\(\)|\bpay[l]oad\b|\bTTL\b|\bBTL\b|time-to-live/;
 let failed = false;
 for (const path of files) {
   const source = await readFile(path, 'utf8');

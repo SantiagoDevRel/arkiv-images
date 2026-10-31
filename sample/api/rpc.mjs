@@ -4,7 +4,7 @@ const names = new Set(['arkiv.schema', 'type', 'mode', 'mime', 'filename', 'sha2
 export function allowedRequest(body) {
   if (!body || Array.isArray(body) || body.jsonrpc !== '2.0' || !['string', 'number'].includes(typeof body.id)) return false;
   if (String(body.id).length > 128 || JSON.stringify(body).length > 8192) return false;
-  if (body.method === 'eth_chainId' || body.method === 'arkiv_getBlockTiming') return !body.params || body.params.length === 0;
+  if (body.method === 'eth_chainId' || body.method === 'eth_blockNumber' || body.method === 'arkiv_getBlockTiming') return !body.params || body.params.length === 0;
   if (body.method !== 'arkiv_query' || !Array.isArray(body.params) || body.params.length !== 2) return false;
   const [query, options] = body.params;
   if (typeof query !== 'string' || query.length > 2048 || !options || typeof options !== 'object' || Array.isArray(options)) return false;

@@ -123,4 +123,6 @@ npm pack
 
 Tests distinguish controlled RPC, live Rabdi, packed installs and npm publication in [verification](docs/verification.md). Seed synthetic data with `node scripts/seed-rabdi.mjs` after build and local key configuration; it discovers matching live entities and never retries unresolved journal entries. Keep `.seed-rabdi-state.json` private and persistent between runs.
 
-Breaking format changes are in [CHANGELOG.md](CHANGELOG.md). Historical evidence under docs stays dated; it is not validation of this candidate.
+Breaking format changes are in [CHANGELOG.md](CHANGELOG.md). Historical evidence under docs stays dated; it is not validation of the pending patch.
+
+Release status: arkiv-images@1.0.1 is published for SDK 1.0.0 / Rabdi. This branch prepares 1.0.2; it has not been published. Samples retain their exact registry pins until the phase-2 release sequence.

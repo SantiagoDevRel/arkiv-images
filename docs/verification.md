@@ -33,7 +33,7 @@ Six regression cases cover SDK errors carrying an uncertain transaction hash at 
 
 Each original/retrieved byte array was compared exactly and its digest verified. Every receipt status was successful; every transaction had gas at least twice measured usage and no more than half the 30,000,000 head gas limit. Across 12 confirmed writes, maximum gasUsed was **4,851,921** and maximum submitted gas was **9,783,200**. A second complete seed run returned the same image keys and transaction hashes without another write. Both runs used the dedicated image test wallet; no funder signing.
 
-The largest image tested live is 130,001 bytes. The 25 MiB maximum was tested against controlled RPC, not submitted to Rabdi. The large synthetic samples expire soon; rerun the idempotent seed after expiration or a network reset. A root key alone is not a promise of availability.
+The largest image tested live is 130,001 bytes. The 25 MiB maximum was tested against controlled RPC, not submitted to Rabdi. The short-lived PNG and chunked JPEG measurements are historical and their examples have expired. The public selector now uses the longer-lived inline JPEG (`0x2989bda8bbadfe7e22a0b1e3a435aa3b266106adbbca3f97c162ee4eccca8488`) and filters all entries against a current block read. This read-only change neither reseeds nor writes. A root key alone is not a promise of availability.
 
 Long expiration materially affects estimates: unsigned 120,000/100,000/70,000-byte maximum-lifetime probes estimated 18,539,745 / 15,508,335 / 10,961,427 gas. Their doubled budgets exceeded the admission ceiling and were rejected before signing. The gate was preserved; large live cases used a shorter lifetime, while the small JPEG verified a maximum-lifetime create.
 
