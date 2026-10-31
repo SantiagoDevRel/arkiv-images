@@ -12,7 +12,7 @@ function run(command, args, cwd = root) {
   const result = spawnSync(command, args, { cwd, encoding: 'utf8', env: process.env });
   if (result.stdout) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
-  if (result.status !== 0) throw Error(`Candidate gate failed: ${command} ${args.join(' ')}`);
+  if (result.status !== 0) throw Error(`Verification gate failed: ${command} ${args.join(' ')}`);
 }
 run(process.execPath, ['scripts/check-dependency.mjs']);
 run(npm, ['run', 'typecheck']); run(npm, ['run', 'lint']); run(npm, ['test']);
@@ -47,14 +47,14 @@ await writeFile(join(consumer, 'package.json'), JSON.stringify({ name: 'images-c
 run(npm, ['install', '--ignore-scripts', '--no-audit', '--no-fund', registry ? 'arkiv-images@1.0.0' : tarball, '@arkiv-network/sdk@1.0.0', 'viem@2.56.3', '--registry', 'https://registry.npmjs.org'], consumer);
 assert.deepEqual(await readFile(join(consumer, 'node_modules/arkiv-images/dist/index.js')), await readFile('dist/index.js'), 'Clean consumer JavaScript must match the built source.');
 for (const guide of ['README.md', 'AGENTS.md', 'CLAUDE.md']) await access(join(consumer, 'node_modules/arkiv-images/sample', guide));
-console.log('Sample guides linked by README are present in the clean packed consumer.');
+console.log(`Sample guides linked by README are present in the clean ${registry ? 'registry' : 'packed'} consumer.`);
 await writeFile(join(consumer, 'inspect.mjs'), `import assert from 'node:assert/strict';
 import { inspectImage, planImage, VERSION } from 'arkiv-images';
 const bytes = new Uint8Array(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4V+L2HwAG5AK4X5zdSAAAAABJRU5ErkJggg==', 'base64'));
 assert.equal(VERSION, '1.0.0');
 assert.deepEqual(inspectImage(bytes), { contentType: 'image/png', width: 1, height: 1, byteLength: 70 });
 assert.equal(planImage(bytes.length).mode, 'inline');
-console.log('Exact README local example passed from the clean packed consumer.');
+console.log('Exact README local example passed from the clean consumer.');
 `);
 await writeFile(join(consumer, 'types.ts'), `import type { ImageInfo, ImagePlan, StoreImageOptions, StoredImage, RetrieveImageOptions, RetrievedImage, TransactionParameterPolicy } from 'arkiv-images';
 import { ImageSchema, VERSION, inspectImage, planImage, MAX_EXPIRATION_BLOCKS } from 'arkiv-images';
