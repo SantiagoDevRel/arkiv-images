@@ -26,7 +26,7 @@ Seed non-sensitive PNG/JPEG examples with `node scripts/seed-rabdi.mjs` from the
 
 The sample fully decodes images before writes and after retrieval, displays only allowed raster MIME, treats filenames as text and revokes Blob URLs. All original image bytes and metadata, including EXIF/GPS, remain public. Use synthetic images. The entity inspector performs separate latest-state read checks and can fail without hiding an already verified image.
 
-For controlled browser checks, run the project browser script against an isolated app context and save evidence separately. Verify 390/768/1440 widths, both themes, keyboard and 200% zoom plus empty/loading/error/recovered states. Actual candidate results and unresolved gates are in [verification](../docs/verification.md); no new preview or live round-trip success is claimed yet.
+For controlled browser checks, run the project browser script against an isolated app context and save evidence separately. Verify 390/768/1440 widths, both themes, keyboard and 200% zoom plus empty/loading/error/recovered states. Actual candidate results are in [verification](../docs/verification.md); the PR records the hydrated preview and deployment ID. Browser-wallet signing remains a separate check from controlled wallet tests and live Node signatures.
 
 The existing layout mirrors the project's Arkiv token/type contract. This migration changes network/data behavior and preserves the design; historical design evidence remains dated under docs.
 
