@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2
+
+- Use the long-lived JPEG example, filter expired examples by current block, align VERSION guidance and verify archives using package.json.
+
+> Historical version entries below are preserved as recorded; use README.md for the current release.
+
 ## 1.0.1 — 2026-10-31
 
 - Correct README vocabulary and package installation guidance for MCP importer compatibility. No runtime changes; the exported implementation `VERSION` remains 1.0.0.

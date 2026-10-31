@@ -1,0 +1,41 @@
+[
+  {
+    "file": "docs/sample-review-v3.md",
+    "revision": "51f4905b47a9b8707294a7ec0c9f74005f31828e",
+    "sha256": "1d2146573ee1ded1091eda1aa21e0f866a46d999cbc816676b4345e6b652c1e9",
+    "lines": [
+      "# Theme, pay\u006coad and explorer revision",
+      "- Browser regression passed inline PNG at the **120,000-byte boundary**, JPEG and a **120,001-byte chunked PNG**. All downloads match their inputs. Complete hex text is compared byte for byte for the 120,000-byte inline pay\u006coad and both 100,000/20,001-byte chunks. Scroll is keyboard-accessible and stays inside a 260 px box.",
+      "- Real Tiramisu reads recovered the existing 120,001-byte image and compared the complete displayed pay\u006coads with its bytes. All four explorer destinations were opened and displayed the matching active entity and creation history: image root, JSON manifest and both binary chunks. An inline JPEG explorer page was also checked. HTTP status alone was not accepted as explorer verification.",
+      "- A Chrome read-only measurement of pay\u006coad rendering plus forced layout took **64.8 ms for 120,000 bytes** and **48.9 ms for 100,000 bytes** on this machine. This is a local observation, not a mobile performance guarantee. The complete pay\u006coads were present, with scroll heights 61,495/51,268 px inside the 260 px viewport.",
+      "| Claude | Reviewed package/dependency and new sample source, ran all 29 tests, inspected four rendered screenshots, and checked explorer routes in the live SPA bundle. No blocking defect. Its two follow-ups were complete-pay\u006coad coverage at 100,000/120,000 bytes and validation of transaction links; both were implemented and verified. |",
+      "Muse noted the documented container-only validation and strict JPEG ending rule, and that chunked root pay\u006coad data is ignored by package retrieval. These were not demonstrated integrity bypasses. The browser still decodes supported raster data, and the inspector separately checks the exact entity schema/pay\u006coads.",
+      "The public JavaScript, CSS and official SVG match the local build byte for byte. The full controlled browser regression passed against the deployed URL: three roundtrips, nine widths and native 200% zoom. Separately, anonymous real Tiramisu reads downloaded the 120,000-byte inline and 120,001-byte chunked images byte for byte, verified every displayed pay\u006coad and all entity URLs, and rendered both themes at 390/768/1440. Ten sensitive/source paths returned 404. [Machine-readable evidence](sample-v3-deployment.json) records exact URLs, assets and checks."
+    ]
+  },
+  {
+    "file": "docs/sample-v2-evidence.json",
+    "revision": "51f4905b47a9b8707294a7ec0c9f74005f31828e",
+    "sha256": "ec6b401d6befeb05f07b1cab8779a56d10ccc227fb30b6941184e82e0f9d44b5",
+    "lines": [
+      "  \"inspection\": \"How this image was retrieved\\n\\n1 entity · 2,977 image bytes\\n\\nImage entity\\nContains image bytes\\nVerified image\\nSHA-256 matches\\nImage entity\\n0x5d8244638c0bb2177a9e48a5a0d19d57716e762d14ea959dd4d56d82efca39bc\\n\\nThe pay\u006coad is the complete original image.\\n\\nPay\u006coad · 2,977 bytes\\nff d8 ff e0 00 10 4a 46 49 46 00 01 01 00 00 01 00 01 00 00 ff e2 01 d8 49 43 43 5f 50 52 4f 46 …\\nAttributes · indexed for queries\\nName\\tType\\tValue\\nfilename\\tstr\\tpublic.jpg\\nheight\\tu64\\t200\\nmime\\tstr\\timage/jpeg\\nmode\\tstr\\tinline\\nsha256\\tbytes32\\t0x6505b34edf4866c89d73791c5b775ee8588ba62ba54249051891d7833d3b1684\\nsize\\tu64\\t2977\\ntype\\tstr\\tarkiv-images/v1\\nwidth\\tu64\\t320\\nSee the inspection query\\n\\nThe pay\u006coad bytes match the verified image. No chunk assembly is needed.\","
+    ]
+  },
+  {
+    "file": "docs/sample-v3-deployment.json",
+    "revision": "51f4905b47a9b8707294a7ec0c9f74005f31828e",
+    "sha256": "2c948c4e5f87701bf984ba4b51a80225eb667a78fca38be7517bbd024a6e0901",
+    "lines": [
+      "      \"completePay\u006coads\": true,",
+      "      \"completePay\u006coads\": true,"
+    ]
+  },
+  {
+    "file": "docs/sample-v3-evidence.json",
+    "revision": "51f4905b47a9b8707294a7ec0c9f74005f31828e",
+    "sha256": "1274be3d79cc0eaca3be3535bec670209767403d70e15b9353a25f2056db70ed",
+    "lines": [
+      "  \"pay\u006coads\": ["
+    ]
+  }
+]

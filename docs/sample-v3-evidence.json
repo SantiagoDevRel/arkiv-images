@@ -2,7 +2,7 @@
   "verifiedAt": "2026-09-09T04:55:21.915Z",
   "package": "arkiv-images@0.1.1",
   "byteExact": true,
-  "binaryData": [
+  "payloads": [
     {
       "chunk": 0,
       "bytes": 100000,
