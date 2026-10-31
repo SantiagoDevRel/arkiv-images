@@ -8,6 +8,7 @@ import { inspectImageEntities } from './inspection';
 import { renderInspection } from './inspector-view';
 import { entityUrl, transactionUrl } from './explorer';
 import './style.css';
+import { activeExamples } from './public-examples';
 
 const el = <T extends HTMLElement = HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -40,7 +41,7 @@ el('pick-file').addEventListener('click', () => el<HTMLInputElement>('file').cli
 function status(id: string, message: string, state = 'idle') { el(id).textContent = message; el(id).dataset.state = state; }
 function setBusy(value: boolean) {
   busy = value;
-  document.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLSelectElement>('input, button:not(#theme-toggle), select').forEach(c => { c.disabled = value; });
+  document.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLSelectElement>('input, button:not(#theme-toggle), select').forEach(c => { c.disabled = value || c.id === 'load-sample' && c.dataset.ready !== 'true'; });
   el('workspace').setAttribute('aria-busy', String(value));
 }
 function mode(value: 'store' | 'retrieve') {
@@ -245,12 +246,21 @@ el<HTMLFormElement>('read-form').addEventListener('submit',async event=>{
 window.addEventListener('pagehide',()=>{detachWallet?.();if(originalUrl)URL.revokeObjectURL(originalUrl);if(recoveredUrl)URL.revokeObjectURL(recoveredUrl);});
 mode('store'); setBusy(false);
 // Public synthetic seeds are hints only; every load runs the package's full integrity checks.
-void fetch('/samples.json', { cache: 'no-store' }).then(response => response.ok ? response.json() : undefined).then(data => {
-  const item = data?.cases?.[0];
+void fetch('/samples.json', { cache: 'no-store' }).then(response => response.ok ? response.json() : undefined).then(async data => {
+  const button = el<HTMLButtonElement>('load-sample'); button.disabled = true;
+  const currentBlock = await client.getBlockNumber({ cacheTime: 0 });
+  const item = activeExamples(Array.isArray(data?.cases) ? data.cases : [], currentBlock)[0];
+  if (!item) { button.textContent = 'No active public example'; return; }
   if (!/^0x[\da-f]{64}$/i.test(item?.imageKey ?? '')) return;
-  const button = el<HTMLButtonElement>('load-sample'); button.disabled = false;
+  button.dataset.ready = 'true'; button.disabled = busy;
   button.addEventListener('click', async () => {
-    if (busy) return; mode('retrieve'); el<HTMLInputElement>('image-key').value = item.imageKey; setBusy(true);
-    try { await readImage(item.imageKey); } finally { setBusy(false); }
+    if (busy) return; setBusy(true); mode('retrieve');
+    try {
+      const head = await client.getBlockNumber({ cacheTime: 0 });
+      if (BigInt(item.expiresAt) <= head) { button.dataset.ready = 'false'; button.disabled = true; button.textContent = 'Public example expired'; return; }
+      mode('retrieve'); el<HTMLInputElement>('image-key').value = item.imageKey;
+      await readImage(item.imageKey as Hex);
+    } catch { status('read-status', 'Public example unavailable. Try reading again later.', 'error'); }
+    finally { setBusy(false); }
   });
-}).catch(() => { /* Samples can be reseeded without blocking visitor-owned images. */ });
+}).catch(() => { el('load-sample').textContent = 'Public example unavailable'; });

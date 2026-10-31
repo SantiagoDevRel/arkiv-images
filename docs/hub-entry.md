@@ -1,3 +1,5 @@
+> Historical dated evidence, preserved from 51f4905. For current API and installation guidance, use the root README and AGENTS.md.
+
 # Hub integration handoff — issue #98
 
 > Historical handoff from before the SDK 1.0 / Rabdi migration. The versions, network and deployment steps below are preserved as context, not current instructions. Follow [README](../README.md) and [candidate verification](verification.md) for the current API and sample; Hub integration still requires its own authorized task.

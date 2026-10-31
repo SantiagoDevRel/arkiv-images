@@ -2,7 +2,7 @@
 
 Store a public PNG or JPEG as queryable Arkiv entities, then retrieve its original bytes with size, MIME, dimensions and SHA-256 checks. Small images use one entity with a non-indexed `bytes()` column. Larger images use `arkiv-chunking`: an image entity references a file manifest and ordered immutable chunks.
 
-**Version 1.0.1 targets Rabdi testnet only.** This documentation-only patch preserves the 1.0.0 implementation. See [verification](docs/verification.md) for that published artifact's actual results and limitations.
+**arkiv-images 1.0.2 targets Rabdi testnet.** It stores PNG/JPEG binary data in `bytes` columns. See [verification](docs/verification.md) for reproducible checks and separately labelled historical observations.
 
 ## Install and inspect
 
@@ -13,7 +13,7 @@ mkdir image-consumer
 cd image-consumer
 npm init -y
 npm pkg set type=module
-npm install arkiv-images@1.0.1 @arkiv-network/sdk@1.0.0 viem@2.56.3
+npm install arkiv-images@1.0.2 @arkiv-network/sdk@1.0.0 viem@2.56.3
 ```
 
 Save `inspect.mjs`:
@@ -76,7 +76,7 @@ Run `node roundtrip.mjs` after configuring those environment variables locally. 
 | `ImageSchema`, `IMAGE_TYPE` | SDK 1.0 named schema `arkiv-images/v2`. Binary `data` is stored without an index. Indexed type/mode/mime/sha256/manifest support discovery. Filename, size and dimensions are stored typed columns. |
 | `ImageStorageError`, `ChunkingError` | Safe code/message; preserve imageKey/manifestKey and transactionHashes on failure. Raw causes can include provider details: never display or log them. |
 | `TransactionParameterPolicy`, `Progress` | Public TypeScript integration types re-exported from chunking. |
-| `VERSION`, `INLINE_MAX_BYTES`, `MAX_IMAGE_BYTES`, `MAX_IMAGE_PIXELS`, `MAX_EXPIRATION_BLOCKS`, `RABDI_MAX_LIFETIME_BLOCKS`, `EXPIRATION_INCLUSION_MARGIN_BLOCKS` | Implementation version (`1.0.0` in this documentation-only patch) and enforced limits. |
+| `VERSION`, `INLINE_MAX_BYTES`, `MAX_IMAGE_BYTES`, `MAX_IMAGE_PIXELS`, `MAX_EXPIRATION_BLOCKS`, `RABDI_MAX_LIFETIME_BLOCKS`, `EXPIRATION_INCLUSION_MARGIN_BLOCKS` | Implementation version (`1.0.2`) and enforced limits. |
 
 Import types such as `ImageInfo`, `ImagePlan`, `StoreImageOptions`, `StoredImage`, `RetrieveImageOptions`, `RetrievedImage`, `ImageContentType` and `ImageErrorCode` directly from `arkiv-images`.
 
@@ -123,4 +123,5 @@ npm pack
 
 Tests distinguish controlled RPC, live Rabdi, packed installs and npm publication in [verification](docs/verification.md). Seed synthetic data with `node scripts/seed-rabdi.mjs` after build and local key configuration; it discovers matching live entities and never retries unresolved journal entries. Keep `.seed-rabdi-state.json` private and persistent between runs.
 
-Breaking format changes are in [CHANGELOG.md](CHANGELOG.md). Historical evidence under docs stays dated; it is not validation of this candidate.
+Breaking format changes are in [CHANGELOG.md](CHANGELOG.md). Historical evidence under docs stays dated; current checks are specified separately.
+

@@ -1,3 +1,5 @@
+> Historical dated evidence, preserved from 51f4905. For current API and installation guidance, use the root README and AGENTS.md.
+
 # Sample design provenance
 
 The sample interface was produced in [Claude Design: Arkiv Images dApp](https://claude.ai/design/p/803e8fb8-05be-472f-9948-c10ac7a41c5a), with the account's existing **Arkiv Design System** selected. The exported HTML and CSS were integrated into `sample/index.html` and `sample/src/style.css`. The design project may require the owner's account; the complete runnable interface is in this repository and requires no design-service access.

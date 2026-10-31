@@ -1,3 +1,5 @@
+> Historical dated evidence, preserved from 51f4905. For current API and installation guidance, use the root README and AGENTS.md.
+
 # Theme, payload and explorer revision
 
 The library remains the published **arkiv-images 0.1.1**, using **arkiv-chunking 0.1.0**, SDK **0.8.0** and viem **2.56.3**. This revision changes the sample, not the npm implementation. Tests ran on Node **22.22.3**, TypeScript **5.9.3**, Vite **8.2.2**, Playwright **1.62.1** and Chrome **152.0.7977.77**.

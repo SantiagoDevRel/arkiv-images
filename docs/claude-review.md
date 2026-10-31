@@ -1,3 +1,5 @@
+> Historical dated evidence, preserved from 51f4905. For current API and installation guidance, use the root README and AGENTS.md.
+
 # Claude review — 2026-09-08
 
 ## Current sample: Claude Design + Lovable revision

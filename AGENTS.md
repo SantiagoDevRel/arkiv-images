@@ -2,7 +2,7 @@ Edit instructions only in AGENTS.md; CLAUDE.md only imports this file.
 
 # Integrating arkiv-images
 
-Read [README.md](README.md) explicitly for the public API, runnable local example, data model, limits, signing and recovery. After this patch is published, install it with `npm install arkiv-images@1.0.1 @arkiv-network/sdk@1.0.0 viem@2.56.3`. Before publication, use the reviewed candidate tarball instead.
+Read [README.md](README.md) explicitly for the public API, runnable local example, data model, limits, signing and recovery. Install version 1.0.2 with `npm install arkiv-images@1.0.2 @arkiv-network/sdk@1.0.0 viem@2.56.3`.
 
 - Ask whether the task needs local inspection, retrieval or a new public upload. Inspection requires no network. Retrieval needs an image key, Rabdi and optionally an independently trusted SHA-256. Writes additionally require a locally configured signing wallet and test funds.
 - Ask whether original bytes, filename and metadata are safe to publish. EXIF/GPS is preserved. Stop if confidentiality is required; encryption is a different tool.
@@ -13,5 +13,6 @@ Read [README.md](README.md) explicitly for the public API, runnable local exampl
 - Serialize account writes. Recheck browser wallet identity/network before each signature, including the final root. Confirm completion only after storeImage resolves. Preserve error imageKey/manifestKey/transactionHashes, including CONFIRMATION_PENDING. Never display raw provider errors or causes.
 - No independent part mutation, transfer or extension. Root existence does not prove chunk availability; expiration does not erase historical copies.
 - Sample reads keep the access key server-side in its own endpoint. Browser writes use the visitor's configured wallet RPC; no shared server signer.
-- Verify the exact local example, public types, meaningful controlled failure cases, requested live network flow and original/retrieved byte equality. Distinguish controlled RPC, packed candidate and registry release. Inspect sample empty/loading/error/recovered states at narrow/medium/wide widths.
+- Verify the exact local example, public types, meaningful controlled failure cases, requested live network flow and original/retrieved byte equality. Distinguish controlled RPC, packed archive and registry release. Inspect sample empty/loading/error/recovered states at narrow/medium/wide widths.
 - Keep AGENTS.md, CLAUDE.md and verification in the npm publication allowlist. Explicitly provide consumers the sample guides. No new skill, MCP, generator, encryption or media-management features belong here.
+
