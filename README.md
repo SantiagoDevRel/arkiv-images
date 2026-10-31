@@ -2,7 +2,7 @@
 
 Store a public PNG or JPEG as queryable Arkiv entities, then retrieve its original bytes with size, MIME, dimensions and SHA-256 checks. Small images use one entity with a non-indexed `bytes()` column. Larger images use `arkiv-chunking`: an image entity references a file manifest and ordered immutable chunks.
 
-**Version 1.0.0 targets Rabdi testnet only.** See [verification](docs/verification.md) for the published artifact, actual results and limitations.
+**Version 1.0.1 targets Rabdi testnet only.** This documentation-only patch preserves the 1.0.0 implementation. See [verification](docs/verification.md) for that published artifact's actual results and limitations.
 
 ## Install and inspect
 
@@ -13,7 +13,7 @@ mkdir image-consumer
 cd image-consumer
 npm init -y
 npm pkg set type=module
-npm install arkiv-images@1.0.0 @arkiv-network/sdk@1.0.0 viem@2.56.3
+npm install arkiv-images@1.0.1 @arkiv-network/sdk@1.0.0 viem@2.56.3
 ```
 
 Save `inspect.mjs`:
@@ -76,7 +76,7 @@ Run `node roundtrip.mjs` after configuring those environment variables locally. 
 | `ImageSchema`, `IMAGE_TYPE` | SDK 1.0 named schema `arkiv-images/v2`. Binary `data` is stored without an index. Indexed type/mode/mime/sha256/manifest support discovery. Filename, size and dimensions are stored typed columns. |
 | `ImageStorageError`, `ChunkingError` | Safe code/message; preserve imageKey/manifestKey and transactionHashes on failure. Raw causes can include provider details: never display or log them. |
 | `TransactionParameterPolicy`, `Progress` | Public TypeScript integration types re-exported from chunking. |
-| `VERSION`, `INLINE_MAX_BYTES`, `MAX_IMAGE_BYTES`, `MAX_IMAGE_PIXELS`, `MAX_EXPIRATION_BLOCKS`, `RABDI_MAX_LIFETIME_BLOCKS`, `EXPIRATION_INCLUSION_MARGIN_BLOCKS` | Package version and enforced limits. |
+| `VERSION`, `INLINE_MAX_BYTES`, `MAX_IMAGE_BYTES`, `MAX_IMAGE_PIXELS`, `MAX_EXPIRATION_BLOCKS`, `RABDI_MAX_LIFETIME_BLOCKS`, `EXPIRATION_INCLUSION_MARGIN_BLOCKS` | Implementation version (`1.0.0` in this documentation-only patch) and enforced limits. |
 
 Import types such as `ImageInfo`, `ImagePlan`, `StoreImageOptions`, `StoredImage`, `RetrieveImageOptions`, `RetrievedImage`, `ImageContentType` and `ImageErrorCode` directly from `arkiv-images`.
 
@@ -88,7 +88,7 @@ Entity Expiration is whole blocks, at least `max(64, transactionCount + 32)` and
 
 Every part and the final root reuse the public `arkiv-chunking` write policy: an unsigned SDK request is estimated at `latest`; gas is at least `max(1_000_000, 2 × estimate)`, with explicit network gasPrice and a fresh latest nonce. The image API additionally stops before signing if that budget exceeds half the latest block gas limit. Longer expiration can substantially increase gas, so shorten Entity Expiration or choose a smaller image if the estimate exceeds that budget. Admitted byte/lifetime limits do not guarantee every combination fits the network's gas budget. `txParams` can increase gas or change fees; it cannot remove required headroom or override the latest nonce. Wallet account/network are checked before every signature.
 
-Serialize writes from the same account. A retry is permitted only once after an authoritative gas-exhausted reverted receipt and only within the half-block gas ceiling. Successful or uncertain writes are never automatically resent. `CONFIRMATION_PENDING` preserves SDK-success hashes and root/manifest keys if a later receipt lookup is unresolved or disagrees. The operation records submitted before that lookup. Browser consumers must keep a `createImageWriteOperation` object across renders and later clicks; `storeImage` is a one-call convenience for an intentional new upload. Inspect preserved receipts before explicitly creating another operation. The sample resets the operation only when you choose a file again. Other failures can also leave confirmed entities. There is no multi-transaction atomicity, rollback, resumable upload, independent part mutation/transfer/extension or automatic cleanup.
+Serialize writes from the same account. A retry is permitted only once after an authoritative gas-exhausted reverted receipt and only within the half-block gas ceiling. Successful or uncertain writes are never automatically resent. `CONFIRMATION_PENDING` preserves SDK-success hashes and root/manifest keys if a later receipt lookup is unresolved or disagrees. The operation enters `submitted` before that lookup. Browser consumers must keep a `createImageWriteOperation` object across renders and later clicks; `storeImage` is a one-call convenience for an intentional new upload. Inspect preserved receipts before explicitly creating another operation. The sample resets the operation only when you choose a file again. Other failures can also leave confirmed entities. There is no multi-transaction atomicity, rollback, resumable upload, independent part mutation/transfer/extension or automatic cleanup.
 
 Retrieval uses latest-state keyset pages and verifies immutable chunks, owner/creator, sequence, lengths, metadata and digest; the manifest is rechecked before return. It does not claim a historical snapshot. An independently trusted digest pins bytes, not the publisher's identity. Missing/corrupt chunks never return a partial image.
 

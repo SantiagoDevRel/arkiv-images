@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1 — 2026-10-31
+
+- Correct README vocabulary and package installation guidance for MCP importer compatibility. No runtime changes; the exported implementation `VERSION` remains 1.0.0.
+
 ## 1.0.0 — 2026-10-31
 
 - Breaking: SDK 1.0.0 peer requirement and Rabdi testnet, chain ID 7794095.
