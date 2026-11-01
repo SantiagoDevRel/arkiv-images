@@ -2,9 +2,10 @@
 function sameDeploymentOrigin(origin, host) {
   if (typeof origin !== 'string' || typeof host !== 'string' || !host || !(origin.startsWith('https://') || origin.startsWith('http://'))) return false;
   const parsed = new URL(origin);
-  const deployment = new URL('https://' + host);
+  const hostname = host.split(':', 1)[0].toLowerCase();
+  const scheme = hostname === 'localhost' || hostname === '127.0.0.1' ? 'http://' : 'https://';
+  const deployment = new URL(scheme + host);
   if (/[/\\?#@\s]/.test(host) || deployment.username || deployment.password || deployment.pathname !== '/' || deployment.search || deployment.hash) return false;
-  if (deployment.hostname === 'localhost' || deployment.hostname === '127.0.0.1') deployment.protocol = 'http:';
   return !parsed.username && !parsed.password && parsed.pathname === '/' && !parsed.search && !parsed.hash && parsed.origin === origin && parsed.origin === deployment.origin;
 }
 
