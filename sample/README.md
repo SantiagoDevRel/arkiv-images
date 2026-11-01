@@ -4,6 +4,8 @@ This sample uses the registry release **arkiv-images 1.0.3** and keeps the image
 
 The UI uses the package public API. Reads go through its own bounded `/api/rpc` function with server-only `ARKIV_ACCESS_KEY`. Only chain ID, current block number, block timing and bounded image/chunk queries are accepted; no signer, access key, upstream URL or raw provider error is sent to the browser. Root and manifest reads are latest state; chunks use keyset pages. Set a free [Hub access key](https://hub.arkiv.network/access-keys) in the Vercel preview environment.
 
+The read function rejects a foreign Origin host or cross-site Fetch Metadata before contacting Rabdi. POST requests require `Content-Type: application/json`; JSON clients without Origin remain supported. These checks limit browser cross-origin quota use; they do not authenticate arbitrary HTTP clients.
+
 Writes use the visitor's MetaMask/Rabby account and configured Rabdi RPC, chain 7794095. If Rabdi is missing, configure it in the wallet using your own access key, then connect again. The app switches to an already configured Rabdi network; it never installs a server key in a wallet. Obtain [test funds](https://hub.arkiv.network/faucet). Every actual signature is guarded for account/network changes and uses the package's explicit gas policy.
 
 ## Build the sample

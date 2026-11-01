@@ -35,7 +35,16 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   const respond = (status, value) => res.status(status).json(value);
+  const origin = req.headers?.origin;
+  if (origin !== undefined) {
+    try {
+      if (typeof origin !== 'string' || new URL(origin).host !== String(req.headers?.host ?? '').toLowerCase()) return respond(403, { error: 'Origin not allowed.' });
+    } catch { return respond(403, { error: 'Origin not allowed.' }); }
+  }
+  if (String(req.headers?.['sec-fetch-site'] ?? '').split(',').some(site => site.trim().toLowerCase() === 'cross-site')) return respond(403, { error: 'Origin not allowed.' });
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return respond(405, { error: 'Use POST for image reads.' }); }
+  const contentType = req.headers?.['content-type'];
+  if (typeof contentType !== 'string' || contentType.split(';', 1)[0].trim().toLowerCase() !== 'application/json') return respond(415, { error: 'Use application/json for image reads.' });
   let body;
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; } catch { return respond(400, { error: 'Invalid read request.' }); }
   if (!allowedRequest(body)) return respond(400, { error: 'Unsupported read request.' });
