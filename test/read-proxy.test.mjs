@@ -30,7 +30,7 @@ test('missing server key fails closed with safe configuration guidance', async (
   const previous = process.env.ARKIV_ACCESS_KEY;
   delete process.env.ARKIV_ACCESS_KEY;
   const result = { headers: {}, setHeader(k,v) { this.headers[k] = v; }, status(v) { this.code = v; return this; }, json(v) { this.body = v; return this; } };
-  try { await handler({ method: 'POST', body: query }, result); }
+  try { await handler({ method: 'POST', headers: { host: 'sample.example', 'content-type': 'application/json' }, body: query }, result); }
   finally { if (previous !== undefined) process.env.ARKIV_ACCESS_KEY = previous; }
   assert.equal(result.code, 503); assert.equal(result.headers['Cache-Control'], 'no-store');
   assert.match(result.body.error.message, /hub\.arkiv\.network\/access-keys/);

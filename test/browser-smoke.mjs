@@ -34,7 +34,7 @@ await page.addInitScript(()=>{
   window.ethereum={isMetaMask:true,request:args=>window.walletRequest(args),on(){},removeListener(){}};
 });
 await page.goto(process.env.SAMPLE_URL??'http://127.0.0.1:3082');
-const packageVersion=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8')).version;
+const packageVersion=JSON.parse(await readFile(new URL('../sample/package.json',import.meta.url),'utf8')).dependencies['arkiv-images'];
 await page.waitForFunction(version=>document.querySelector('#version')?.textContent===`v${version}`,packageVersion);
 assert.equal(await page.locator('html').getAttribute('lang'),'en');
 assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');

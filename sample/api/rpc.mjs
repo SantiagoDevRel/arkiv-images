@@ -1,3 +1,14 @@
+// Origin is a serialized origin, never a general URL. Forwarded headers do not select trust.
+function sameDeploymentOrigin(origin, host) {
+  if (typeof origin !== 'string' || typeof host !== 'string' || !host || !(origin.startsWith('https://') || origin.startsWith('http://'))) return false;
+  const parsed = new URL(origin);
+  const hostname = host.split(':', 1)[0].toLowerCase();
+  const scheme = hostname === 'localhost' || hostname === '127.0.0.1' ? 'http://' : 'https://';
+  const deployment = new URL(scheme + host);
+  if (/[/\\?#@\s]/.test(host) || deployment.username || deployment.password || deployment.pathname !== '/' || deployment.search || deployment.hash) return false;
+  return !parsed.username && !parsed.password && parsed.pathname === '/' && !parsed.search && !parsed.hash && parsed.origin === origin && parsed.origin === deployment.origin;
+}
+
 // Read-only, bounded Rabdi transport. Access keys and upstream errors stay on the server.
 const scalarFields = new Set(['key', 'owner', 'creator', 'createdAt', 'updatedAt', 'expiresAt', 'creationFlags', 'attributeSchema']);
 const names = new Set(['arkiv.schema', 'type', 'mode', 'mime', 'filename', 'sha256', 'size', 'width', 'height', 'manifest', 'data', 'metadata', 'complete', 'totalbytes', 'chunkcount', 'chunksize', 'seq']);
@@ -35,7 +46,16 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   const respond = (status, value) => res.status(status).json(value);
+  const origin = req.headers?.origin;
+  if (origin !== undefined) {
+    try {
+      if (!sameDeploymentOrigin(origin, req.headers?.host)) return respond(403, { error: 'Origin not allowed.' });
+    } catch { return respond(403, { error: 'Origin not allowed.' }); }
+  }
+  if (String(req.headers?.['sec-fetch-site'] ?? '').split(',').some(site => site.trim().toLowerCase() === 'cross-site')) return respond(403, { error: 'Origin not allowed.' });
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return respond(405, { error: 'Use POST for image reads.' }); }
+  const contentType = req.headers?.['content-type'];
+  if (typeof contentType !== 'string' || contentType.split(';', 1)[0].trim().toLowerCase() !== 'application/json') return respond(415, { error: 'Use application/json for image reads.' });
   let body;
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; } catch { return respond(400, { error: 'Invalid read request.' }); }
   if (!allowedRequest(body)) return respond(400, { error: 'Unsupported read request.' });
