@@ -4,7 +4,7 @@ import { eq } from '@arkiv-network/sdk/query';
 import { uploadFile, downloadFile, hashFile, ChunkingError, DEFAULT_CHUNK_BYTES, MAX_EXPIRATION_BLOCKS, writeWithPolicy, WriteConfirmationPendingError, type TransactionParameterPolicy, type WriteTransactionParameters, type ChunkingPublicClient, type ChunkingWalletClient, type Progress } from 'arkiv-chunking';
 import { hexToBytes, type Hex } from 'viem';
 
-export const VERSION = '1.0.3';
+export const VERSION = '1.0.4';
 export const IMAGE_TYPE = 'arkiv-images/v2';
 type Stored<T extends TypeTag> = Column<T, false, false, false>;
 type Indexed<T extends TypeTag> = Column<T, true, false, false>;
