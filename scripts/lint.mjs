@@ -1,6 +1,8 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import ts from 'typescript';
+import { fileURLToPath } from 'node:url';
+import { checkSampleRelease } from './sample-release-guard.mjs';
 const files = ['README.md', 'AGENTS.md', 'CLAUDE.md', 'sample/README.md', 'sample/AGENTS.md', 'sample/CLAUDE.md', 'sample/index.html'];
 async function walk(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -23,5 +25,7 @@ for (const path of files) {
     if (result.status !== 0) { console.error(result.stderr); failed = true; }
   }
 }
+const releaseFindings = checkSampleRelease(fileURLToPath(new URL('../', import.meta.url)));
+for (const finding of releaseFindings) { console.error(finding); failed = true; }
 if (failed) process.exitCode = 1;
 else console.log(`Syntax and current-guidance checks passed for ${files.length} files.`);

@@ -1,6 +1,6 @@
 # Image sample — Rabdi
 
-This sample uses the registry release **arkiv-images 1.0.2** and keeps the image picker, local-date Entity Expiration, byte verification, download, entity inspector, dark/light themes and wallet selection. All copy is English. It targets the existing **arkiv-images-example** Vercel project at https://arkiv-images-example.vercel.app.
+This sample uses the registry release **arkiv-images 1.0.3** and keeps the image picker, local-date Entity Expiration, byte verification, download, entity inspector, dark/light themes and wallet selection. All copy is English. It targets the existing **arkiv-images-example** Vercel project at https://arkiv-images-example.vercel.app.
 
 The UI uses the package public API. Reads go through its own bounded `/api/rpc` function with server-only `ARKIV_ACCESS_KEY`. Only chain ID, current block number, block timing and bounded image/chunk queries are accepted; no signer, access key, upstream URL or raw provider error is sent to the browser. Root and manifest reads are latest state; chunks use keyset pages. Set a free [Hub access key](https://hub.arkiv.network/access-keys) in the Vercel preview environment.
 
@@ -15,7 +15,20 @@ npm ci
 npm run build
 ```
 
-The sample pins `arkiv-images` to exact registry version `1.0.2`; its lock verifies the published archive integrity. No local tarball is used or uploaded. Deploy the sample folder to the existing linked project; its publication allowlist includes the application source and API function.
+The sample pins `arkiv-images` to exact registry version `1.0.3`; its lock verifies the published archive integrity. Its direct chunking dependency is pinned to registry version 1.1.2. No local tarball is used or uploaded.
+
+## Deploy to the existing project
+
+Use the existing **santiago-hobby/arkiv-images-example** Vercel project. The CLI uploads **sample/** as the project root; the project Root Directory setting is **.** relative to that upload. From the repository root:
+
+```sh
+vercel link --cwd sample --project arkiv-images-example --scope santiago-hobby
+vercel deploy --cwd sample --prod --scope santiago-hobby
+```
+
+Vercel builds remotely from the uploaded sample source. Its `vercel.json` selects Vite, runs `npm ci` and `npm run build`, and serves `dist/` together with the Node function `api/rpc.mjs`. This route does not use `--prebuilt` or upload a local `.vercel/output`. The anchored `.vercelignore` allowlist includes the manifest, genuine lock, TypeScript config, HTML, Vercel config, `src/**`, `public/**` and `api/**`; it excludes local environment files and dependency/build directories.
+
+Configure `ARKIV_ACCESS_KEY` only in this existing project's server environment, using the sample read key. It is read by `api/rpc.mjs`; Vite receives no access key. Versioned [package documentation](https://github.com/SantiagoDevRel/arkiv-images/tree/v1.0.3#readme) and the [package agent guide](https://github.com/SantiagoDevRel/arkiv-images/blob/v1.0.3/AGENTS.md) match the installed release. `node scripts/sample-release-guard.mjs` from the repository root checks versioned sample links and the remote-build upload contract; `npm test` executes its negative mutations.
 
 The Vite development server alone does not serve Vercel functions. Use a Vercel preview for the complete real-network read flow; controlled browser tests route `/api/rpc` to the in-memory harness. Never put an access key in Vite environment variables.
 

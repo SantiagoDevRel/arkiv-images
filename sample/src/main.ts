@@ -87,7 +87,7 @@ function message(error: unknown): string {
       TOO_LARGE: 'The image exceeds 25 MiB. Choose a smaller file.',
       INVALID_INPUT: 'Check the image key, filename and expiration date.',
       NETWORK_MISMATCH: 'Reconnect your wallet to continue on Rabdi.',
-      CONFIRMATION_PENDING: 'A write was reported successful but its receipt recheck is pending. Preserve the keys and hashes below; inspect them before trying another upload.',
+      CONFIRMATION_PENDING: 'A submitted write has unresolved receipt confirmation. Preserve the keys and hashes below; inspect them before trying another upload.',
       NOT_FOUND: 'Image not found. Check the key and network; the entity may have expired.',
       UPLOAD_FAILED: 'Storing did not complete. Inspect your wallet and available receipts before trying again.',
       READ_FAILED: 'Could not reach Arkiv. Check your connection and try retrieving again.',
