@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4
+
+- Pin arkiv-chunking 1.1.3 so every inherited write enforces half the fresh latest block gas limit, including the single allowed retry.
+
 ## 1.0.3
 
 - Depends on arkiv-chunking 1.1.2 for the corrected shared write policy, which preserves an uncertain submission hash without resending.
