@@ -4,6 +4,14 @@ import handler from '../sample/api/rpc.mjs';
 
 const same = {host: 'sample.example', origin: 'https://sample.example', 'content-type': 'application/json'};
 const cases = [
+  ['strict Origin HTTP downgrade', {...same, origin: "http://sample.example"}, 403],
+  ['strict Origin FTP scheme', {...same, origin: "ftp://sample.example"}, 403],
+  ['strict Origin userinfo', {...same, origin: ['https://', 'user', ':', 'password', '@sample.example'].join('')}, 403],
+  ['strict Origin path', {...same, origin: "https://sample.example/path"}, 403],
+  ['strict Origin query', {...same, origin: "https://sample.example?x=1"}, 403],
+  ['strict Origin fragment', {...same, origin: "https://sample.example#part"}, 403],
+  ['strict Origin missing authority slashes', {...same, origin: "https:sample.example"}, 403],
+
   ['foreign JSON origin', {...same, origin: 'https://foreign.example'}, 403],
   ['foreign plain-text origin', {...same, origin: 'https://foreign.example', 'content-type': 'text/plain'}, 403],
   ['same-origin plain text', {...same, 'content-type': 'text/plain'}, 415],
@@ -44,6 +52,8 @@ for (const [name, headers, expected] of cases) test(`read proxy rejects ${name} 
 });
 
 for (const [name, headers] of [
+  ['local HTTP localhost', {...same, host: 'localhost:17811', origin: 'http://localhost:17811'}],
+  ['local HTTP loopback', {...same, host: '127.0.0.1:17811', origin: 'http://127.0.0.1:17811'}],
   ['same-origin JSON browser', {...same, 'sec-fetch-site': 'same-origin'}],
   ['same-origin JSON with charset', {...same, 'content-type': 'Application/JSON; charset=utf-8'}],
   ['origin absent for JSON clients', {host: same.host, 'content-type': 'application/json'}],

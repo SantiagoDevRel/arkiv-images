@@ -1,3 +1,13 @@
+// Origin is a serialized origin, never a general URL. Forwarded headers do not select trust.
+function sameDeploymentOrigin(origin, host) {
+  if (typeof origin !== 'string' || typeof host !== 'string' || !host || !(origin.startsWith('https://') || origin.startsWith('http://'))) return false;
+  const parsed = new URL(origin);
+  const deployment = new URL('https://' + host);
+  if (/[/\\?#@\s]/.test(host) || deployment.username || deployment.password || deployment.pathname !== '/' || deployment.search || deployment.hash) return false;
+  if (deployment.hostname === 'localhost' || deployment.hostname === '127.0.0.1') deployment.protocol = 'http:';
+  return !parsed.username && !parsed.password && parsed.pathname === '/' && !parsed.search && !parsed.hash && parsed.origin === origin && parsed.origin === deployment.origin;
+}
+
 // Read-only, bounded Rabdi transport. Access keys and upstream errors stay on the server.
 const scalarFields = new Set(['key', 'owner', 'creator', 'createdAt', 'updatedAt', 'expiresAt', 'creationFlags', 'attributeSchema']);
 const names = new Set(['arkiv.schema', 'type', 'mode', 'mime', 'filename', 'sha256', 'size', 'width', 'height', 'manifest', 'data', 'metadata', 'complete', 'totalbytes', 'chunkcount', 'chunksize', 'seq']);
@@ -38,7 +48,7 @@ export default async function handler(req, res) {
   const origin = req.headers?.origin;
   if (origin !== undefined) {
     try {
-      if (typeof origin !== 'string' || new URL(origin).host !== String(req.headers?.host ?? '').toLowerCase()) return respond(403, { error: 'Origin not allowed.' });
+      if (!sameDeploymentOrigin(origin, req.headers?.host)) return respond(403, { error: 'Origin not allowed.' });
     } catch { return respond(403, { error: 'Origin not allowed.' }); }
   }
   if (String(req.headers?.['sec-fetch-site'] ?? '').split(',').some(site => site.trim().toLowerCase() === 'cross-site')) return respond(403, { error: 'Origin not allowed.' });
