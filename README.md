@@ -2,18 +2,18 @@
 
 Store a public PNG or JPEG as queryable Arkiv entities, then retrieve its original bytes with size, MIME, dimensions and SHA-256 checks. Small images use one entity with a non-indexed `bytes()` column. Larger images use `arkiv-chunking`: an image entity references a file manifest and ordered immutable chunks.
 
-**arkiv-images 1.0.4 targets Rabdi testnet.** It stores PNG/JPEG binary data in `bytes` columns. See [verification](docs/verification.md) for reproducible checks and separately labelled historical observations.
+**arkiv-images 1.0.5 targets Rabdi testnet.** It stores PNG/JPEG binary data in `bytes` columns. See [verification](docs/verification.md) for reproducible checks and separately labelled historical observations.
 
 ## Install and inspect
 
-ESM, Node 22.10+ with Web Crypto, or a browser on HTTPS/localhost. Dependencies: SDK 1.0.0, viem 2.56.3, arkiv-chunking 1.1.3.
+ESM, Node 22.10+ with Web Crypto, or a browser on HTTPS/localhost. Dependencies: SDK `^1.0.0`, verified with 1.0.1, viem 2.56.3, arkiv-chunking 1.1.3.
 
 ```sh
 mkdir image-consumer
 cd image-consumer
 npm init -y
 npm pkg set type=module
-npm install arkiv-images@1.0.4 @arkiv-network/sdk@1.0.0 viem@2.56.3
+npm install arkiv-images@1.0.5 @arkiv-network/sdk@1.0.1 viem@2.56.3
 ```
 
 Save `inspect.mjs`:
@@ -76,15 +76,17 @@ Run `node roundtrip.mjs` after configuring those environment variables locally. 
 | `ImageSchema`, `IMAGE_TYPE` | SDK 1.0 named schema `arkiv-images/v2`. Binary `data` is stored without an index. Indexed type/mode/mime/sha256/manifest support discovery. Filename, size and dimensions are stored typed columns. |
 | `ImageStorageError`, `ChunkingError` | Safe code/message; preserve imageKey/manifestKey and transactionHashes on failure. Raw causes can include provider details: never display or log them. |
 | `TransactionParameterPolicy`, `Progress` | Public TypeScript integration types re-exported from chunking. |
-| `VERSION`, `INLINE_MAX_BYTES`, `MAX_IMAGE_BYTES`, `MAX_IMAGE_PIXELS`, `MAX_EXPIRATION_BLOCKS`, `RABDI_MAX_LIFETIME_BLOCKS`, `EXPIRATION_INCLUSION_MARGIN_BLOCKS` | Implementation version (`1.0.4`) and enforced limits. |
+| `VERSION`, `INLINE_MAX_BYTES`, `MAX_IMAGE_BYTES`, `MAX_IMAGE_PIXELS`, `MAX_EXPIRATION_BLOCKS`, `RABDI_MAX_LIFETIME_BLOCKS`, `EXPIRATION_INCLUSION_MARGIN_BLOCKS` | Implementation version (`1.0.5`) and enforced limits. |
 
 Import types such as `ImageInfo`, `ImagePlan`, `StoreImageOptions`, `StoredImage`, `RetrieveImageOptions`, `RetrievedImage`, `ImageContentType` and `ImageErrorCode` directly from `arkiv-images`.
 
 Limits: **120,000 bytes** inline; **25 MiB** per image; **40,000,000 pixels**. Chunking uses 100,000-byte slices. Larger files require N+3 transactions for N chunks. `planImage` computes this count. These are package admission limits, not a promise of every node's transaction budget.
 
-Entity Expiration is whole blocks, at least `max(64, transactionCount + 32)` and at most **7,883,970**, leaving 30 blocks below Rabdi's 7,884,000-block maximum. There is no unlimited lifetime. Longer storage requires coordinated Lifetime Extension outside this API. The image root and manifest use the same absolute deadline; retrieval rejects independent deadline changes. Root existence alone does not guarantee availability of every chunk.
+Entity Expiration is whole blocks, at least `max(64, transactionCount + 32)` and at most **7,883,970**, leaving 30 blocks below Rabdi's 7,884,000-block maximum. There is no unlimited lifetime. Longer storage requires coordinated Lifetime Extension outside this API. For a standalone SDK 1.0.1+ entity, `ExpirationTime.max()` selects the longest lifetime from its landing block without subtraction. Images retain the existing file-format admission bound to coordinate one absolute deadline across separately included parts; applying `max()` independently to each part would produce different deadlines. The image root and manifest use the same absolute deadline; retrieval rejects independent deadline changes. Root existence alone does not guarantee availability of every chunk.
 
 ## Signing and recovery
+
+SDK 1.0.1 rejects an over-maximum SDK expiry before sending with `InvalidExpiryError`; the prior SDK version could revert on chain with `ExpiryBeyondMaxLifetime`. Image admission rejects out-of-range block lifetimes before either SDK path. SDK 1.0.1 also adds default gas headroom and reports gas exhaustion with `EntityMutationError`. Neither replaces the explicit write recipe or receipt-based retry authorization below.
 
 Every part and the final root reuse the public `arkiv-chunking` write policy: an unsigned SDK request is estimated at `latest`; gas is at least `max(1_000_000, 2 × estimate)`, with explicit network gasPrice and a fresh latest nonce. The image API additionally stops before signing if that budget exceeds half the latest block gas limit. Longer expiration can substantially increase gas, so shorten Entity Expiration or choose a smaller image if the estimate exceeds that budget. Admitted byte/lifetime limits do not guarantee every combination fits the network's gas budget. `txParams` can increase gas or change fees; it cannot remove required headroom or override the latest nonce. Wallet account/network are checked before every signature.
 
@@ -109,7 +111,7 @@ The package checks containers, not full PNG CRC/JPEG entropy decoding or malware
 
 ## Sample and development
 
-The [sample README](sample/README.md) explains the existing `arkiv-images-example` project and visitor-wallet setup. Reads use its own bounded `/api/rpc` endpoint and a server-side `ARKIV_ACCESS_KEY`; the visitor configures their own wallet RPC. No server signer. The sample pins the released registry package `arkiv-images@1.0.4`.
+The [sample README](sample/README.md) explains the existing `arkiv-images-example` project and visitor-wallet setup. Reads use its own bounded `/api/rpc` endpoint and a server-side `ARKIV_ACCESS_KEY`; the visitor configures their own wallet RPC. No server signer. The sample pins the released registry package `arkiv-images@1.0.4`, independently of the library version above.
 
 Give consumer agents [AGENTS.md](AGENTS.md) and [sample/AGENTS.md](sample/AGENTS.md) explicitly. The corresponding CLAUDE.md files only import those guides.
 

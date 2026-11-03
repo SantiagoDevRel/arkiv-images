@@ -8,7 +8,7 @@ import { str } from '@arkiv-network/sdk/schema';
 import { http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { hashFile } from 'arkiv-chunking';
-import { ImageSchema, storeImage, retrieveImage, ImageStorageError, ChunkingError, MAX_EXPIRATION_BLOCKS } from '../dist/index.js';
+import { VERSION, ImageSchema, storeImage, retrieveImage, ImageStorageError, ChunkingError, MAX_EXPIRATION_BLOCKS } from '../dist/index.js';
 import { png } from '../test/fixtures.mjs';
 
 let queries = 0;
@@ -80,7 +80,7 @@ async function main() {
     cases.push({ filename, imageKey: saved.imageKey, manifestKey: saved.manifestKey, sha256, mode: verified.mode, format: verified.contentType, bytes: bytes.length, width: verified.width, height: verified.height, expiresAt: String(verified.expiresAt), byteExact: true, transactions });
     console.log(JSON.stringify({ filename, imageKey: saved.imageKey, mode: verified.mode, bytes: bytes.length, byteExact: true }));
   }
-  const report = { network: 'Rabdi', chainId: 7794095, sdk: '1.0.0', package: 'arkiv-images@1.0.0 candidate', verifiedAt: new Date().toISOString(), queriesKeyA: queries, cases };
+  const report = { network: 'Rabdi', chainId: 7794095, sdk: JSON.parse(await readFile('node_modules/@arkiv-network/sdk/package.json','utf8')).version, package: `arkiv-images@${VERSION}`, verifiedAt: new Date().toISOString(), queriesKeyA: queries, cases };
   await writeFile(new URL('../docs/rabdi-evidence.json', import.meta.url), JSON.stringify(report, null, 2) + '\n');
   await writeFile(new URL('../sample/public/samples.json', import.meta.url), JSON.stringify({ chainId: 7794095, cases }, null, 2) + '\n');
   console.log(JSON.stringify({ queriesKeyA: queries, signedWithFunder: false }));

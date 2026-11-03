@@ -1,8 +1,8 @@
 // Controlled in-memory RPC for contract/UI tests. This is NOT an Arkiv node.
-// ABI structs checked against installed SDK 1.0.0; the SDK itself encodes all writes.
+// ABI structs checked against installed SDK 1.0.1; the SDK itself encodes all writes.
 import { decodeFunctionData, decodeAbiParameters, encodeAbiParameters, encodeEventTopics, hexToString, parseAbi, parseAbiParameters, toHex } from 'viem';
 import { ENTITY_EVENTS_ABI } from '@arkiv-network/sdk/entity';
-// Wire tags verified in SDK 1.0.0 src/entity/params.ts; no private SDK import.
+// Wire tags verified in SDK 1.0.1 src/entity/params.ts; no private SDK import.
 const OperationType = { Create: 1, Patch: 2 };
 
 const executeAbi = parseAbi(['function execute((uint8 operation, bytes operationData)[] ops) external returns (bytes32[] keys)']);

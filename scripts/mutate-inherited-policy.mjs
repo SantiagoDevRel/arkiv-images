@@ -14,7 +14,7 @@ const expectedVersion = JSON.parse(fs.readFileSync('package.json', 'utf8')).depe
 assert.match(expectedVersion, /^\d+\.\d+\.\d+$/, 'Declare an exact arkiv-chunking version.');
 console.log(JSON.stringify({ declaredChunkingVersion: expectedVersion, installedChunkingVersion: current.version }));
 assert.equal(current.version, expectedVersion, 'Installed arkiv-chunking must match the exact declared dependency.');
-const positive = run(process.execPath, ['--test', 'test/inherited-policy.test.mjs'], root);
+const positive = run(process.execPath, ['--test', '--test-reporter=tap', 'test/inherited-policy.test.mjs'], root);
 fs.writeFileSync(path.join(output, 'inherited-positive.log'), positive.stdout + positive.stderr);
 assert.equal(positive.status, 0, positive.stdout + positive.stderr);
 assert.match(positive.stdout, /# pass 10/);
@@ -25,14 +25,14 @@ fs.writeFileSync(path.join(stage, 'package.json'), JSON.stringify({ name: 'image
 fs.cpSync('dist', path.join(stage, 'dist'), { recursive: true });
 fs.mkdirSync(path.join(stage, 'test'));
 for (const file of ['inherited-policy.test.mjs', 'rpc-harness.mjs', 'fixtures.mjs']) fs.copyFileSync(path.join('test', file), path.join(stage, 'test', file));
-const install = run('npm', ['install', '--ignore-scripts', '--save-exact', '--no-audit', '--no-fund', '--registry=https://registry.npmjs.org', 'arkiv-chunking@1.1.0', '@arkiv-network/sdk@1.0.0', 'viem@2.56.3'], stage);
+const install = run('npm', ['install', '--ignore-scripts', '--save-exact', '--no-audit', '--no-fund', '--registry=https://registry.npmjs.org', 'arkiv-chunking@1.1.0', '@arkiv-network/sdk@1.0.1', 'viem@2.56.3'], stage);
 fs.writeFileSync(path.join(output, 'inherited-old-install.log'), install.stdout + install.stderr);
 assert.equal(install.status, 0, install.stdout + install.stderr);
 const oldManifest = JSON.parse(fs.readFileSync(path.join(stage, 'node_modules/arkiv-chunking/package.json'), 'utf8'));
 const oldLock = JSON.parse(fs.readFileSync(path.join(stage, 'package-lock.json'), 'utf8'));
 assert.equal(oldManifest.version, '1.1.0');
 assert.equal(oldLock.packages['node_modules/arkiv-chunking'].resolved, 'https://registry.npmjs.org/arkiv-chunking/-/arkiv-chunking-1.1.0.tgz');
-const negative = run(process.execPath, ['--test', 'test/inherited-policy.test.mjs'], stage);
+const negative = run(process.execPath, ['--test', '--test-reporter=tap', 'test/inherited-policy.test.mjs'], stage);
 fs.writeFileSync(path.join(output, 'inherited-old-policy.log'), negative.stdout + negative.stderr);
 assert.equal(negative.status, 1, negative.stdout + negative.stderr);
 assert.match(negative.stdout, /# fail 10/);
