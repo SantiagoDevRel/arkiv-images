@@ -3,7 +3,9 @@ import type { GetBlockTimingReturnType } from '@arkiv-network/sdk';
 const MAX_DATE_MS = 8_640_000_000_000_000;
 const MAX_UINT64 = (1n << 64n) - 1n;
 const MAX_SAFE_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
-// Rabdi maximum less a 30-block inclusion margin, matching arkiv-images 1.0.
+// This package's file admission limit is retained for compatibility with files already
+// written; not the SDK/chain maximum of 7,884,000 blocks or a requirement of Rabdi.
+// Sharing an absolute deadline does not require subtracting 30 blocks.
 const MAX_EXPIRATION_BLOCKS = 7_883_970;
 const MAX_IMAGE_TRANSACTIONS = 266;
 export const MAX_TIMING_AGE_MS = 5 * 60 * 1000;
@@ -58,7 +60,7 @@ export function dateToBlocks(
     fail('Choose a later expiration so there is time to approve and store this image.');
   }
   if (!Number.isSafeInteger(blocks) || blocks > MAX_EXPIRATION_BLOCKS || timing.currentBlock + BigInt(blocks) > MAX_UINT64) {
-    fail('Choose an earlier expiration. This date exceeds the supported storage lifetime.');
+    fail('Choose an earlier expiration. This package limits file admission to 7,883,970 blocks for compatibility with files already written; that is not the SDK or chain maximum of 7,884,000 blocks or a requirement of Rabdi.');
   }
   return blocks;
 }

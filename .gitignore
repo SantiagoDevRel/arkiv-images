@@ -10,3 +10,5 @@ candidate-artifact.json
 registry-artifact.json
 migration-diagnostics.json
 diagnostic-package-lock.json
+
+.sdk101/

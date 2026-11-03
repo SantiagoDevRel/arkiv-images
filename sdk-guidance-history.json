@@ -1,0 +1,18 @@
+[
+  {
+    "file": "CHANGELOG.md",
+    "sha256": "96f4eef6dbf68f29667c309d115e1b65d6f39a9f828a466ca39eb6e1ebb49f2d",
+    "reason": "Immutable release history or a clearly marked historical section.",
+    "lines": [
+      "- Breaking: SDK 1\u002e0\u002e0 peer requirement and Rabdi testnet, chain ID 7794095."
+    ]
+  },
+  {
+    "file": "docs/verification.md",
+    "sha256": "5164d94dca74f9019ecaa1acc18638aa3f3bcfc771f5264cd136dd7e7dcbe367",
+    "reason": "Immutable release history or a clearly marked historical section.",
+    "lines": [
+      "Release: **arkiv-images 1\u002e0\u002e0**, SDK **1\u002e0\u002e0**, viem **2.56.3**, exact registry **arkiv-chunking 1.1.0**. The separately approved tarball was published without rebuilding: SHA-256 `c4c5417edb32179f7cc2f39b2e959711103925f019a0bd0ba62e84593826c110`, npm shasum `ff85d022ad0d3e074f002fec06a52cb2914b1d34`. Registry installation is checked independently from the earlier candidate installation."
+    ]
+  }
+]

@@ -18,11 +18,13 @@ const result = spawnSync('npm', ['install', '--package-lock-only', '--no-audit',
 assert.equal(result.status, 0);
 const lock = JSON.parse(await readFile(join(temporary, 'package-lock.json'), 'utf8'));
 const image = lock.packages['node_modules/arkiv-images'];
-assert.equal(image.version, '1.0.0');
-assert.equal(image.resolved, 'https://registry.npmjs.org/arkiv-images/-/arkiv-images-1.0.0.tgz');
-assert.equal(image.integrity, 'sha512-h7FO+7fV8zqkUMN2R6xvf2HgvSMW18gVVAU/fp5xyEMECYxBghx+BUAv8MPng2WYjVmST0QMUJn+Zh+OljU8wg==');
+const version = manifest.dependencies['arkiv-images'];
+assert.equal(image.version, version);
+assert.equal(image.resolved, `https://registry.npmjs.org/arkiv-images/-/arkiv-images-${version}.tgz`);
+if (previous.packages['node_modules/arkiv-images'].version === version) assert.equal(image.integrity, previous.packages['node_modules/arkiv-images'].integrity);
 for (const [name, pkg] of Object.entries(previous.packages)) {
-  if (name !== 'node_modules/arkiv-images') assert.equal(lock.packages[name]?.version, pkg.version, `Retain reviewed version of ${name}`);
+  if (name === 'node_modules/@arkiv-network/sdk') assert.equal(lock.packages[name]?.version, manifest.dependencies['@arkiv-network/sdk']);
+  else if (name !== 'node_modules/arkiv-images') assert.equal(lock.packages[name]?.version, pkg.version, `Retain reviewed version of ${name}`);
 }
 await copyFile(join(temporary, 'package-lock.json'), 'sample/package-lock.json');
 console.log('Clean registry lock verified; no local tarball metadata retained.');

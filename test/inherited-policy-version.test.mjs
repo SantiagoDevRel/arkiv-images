@@ -26,7 +26,7 @@ function execute({declared,installed=declared,trace=[]}){
  const spawnSync=(command,args,options)=>{
   trace.push({command,args,cwd:options.cwd});
   if(command==='npm'){assert.ok(args.includes('arkiv-chunking@1.1.0'));return {status:0,stdout:'Controlled old-registry install boundary',stderr:''};}
-  assert.deepEqual([...args],['--test','test/inherited-policy.test.mjs']);
+  assert.deepEqual([...args],['--test','--test-reporter=tap','test/inherited-policy.test.mjs']);
   return options.cwd===stage
    ? {status:1,stdout:'# fail 10\n'+('    must retain inherited uncertain hash\n{"noResend":true}\n').repeat(10),stderr:''}
    : {status:0,stdout:'# pass 10\n'+('{"noResend":true}\n').repeat(10),stderr:''};

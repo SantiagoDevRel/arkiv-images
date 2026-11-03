@@ -19,7 +19,7 @@ const integrity='sha512-'+createHash('sha512').update(bytes).digest('base64');
 assert.equal(integrity,packed.integrity);assert.equal(createHash('sha1').update(bytes).digest('hex'),packed.shasum);
 const consumer=join(staging,'consumer');await mkdir(consumer);
 await writeFile(join(consumer,'package.json'),JSON.stringify({name:'images-release-consumer',private:true,type:'module'}));
-run('npm',['install','--ignore-scripts','--no-audit','--no-fund',tarball,'@arkiv-network/sdk@1.0.0','viem@2.56.3'],consumer);
+run('npm',['install','--ignore-scripts','--no-audit','--no-fund',tarball,'@arkiv-network/sdk@1.0.1','viem@2.56.3'],consumer);
 assert.deepEqual(await readFile(join(consumer,'node_modules/arkiv-images/dist/index.js')),await readFile('dist/index.js'));
 for(const guide of ['README.md','AGENTS.md','CLAUDE.md'])await access(join(consumer,'node_modules/arkiv-images/sample',guide));
 await writeFile(join(consumer,'inspect.mjs'),`import assert from 'node:assert/strict';import{inspectImage,planImage,VERSION}from'arkiv-images';const bytes=new Uint8Array(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4V+L2HwAG5AK4X5zdSAAAAABJRU5ErkJggg==','base64'));assert.equal(VERSION,${JSON.stringify(version)});assert.deepEqual(inspectImage(bytes),{contentType:'image/png',width:1,height:1,byteLength:70});assert.equal(planImage(bytes.length).mode,'inline');console.log('Manifest version and exact README example passed');`);

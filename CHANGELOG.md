@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.5
+
+- Verify the SDK `^1.0.0` peer with 1.0.1 and pin development, consumers and the sample SDK to 1.0.1.
+- Update current install guidance, expiry and gas-error behavior; preserve historical evidence.
+- Add current-guidance, packed-content and SDK peer compatibility checks with negative mutations.
+- Pin root and sample dependencies to published arkiv-chunking 1.1.4; retain the independent registry sample dependency.
+
 ## 1.0.4
 
 - Pin arkiv-chunking 1.1.3 so every inherited write enforces half the fresh latest block gas limit, including the single allowed retry.

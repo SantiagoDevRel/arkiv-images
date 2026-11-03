@@ -4,7 +4,7 @@ import { eq } from '@arkiv-network/sdk/query';
 import { uploadFile, downloadFile, hashFile, ChunkingError, DEFAULT_CHUNK_BYTES, MAX_EXPIRATION_BLOCKS, writeWithPolicy, WriteConfirmationPendingError, type TransactionParameterPolicy, type WriteTransactionParameters, type ChunkingPublicClient, type ChunkingWalletClient, type Progress } from 'arkiv-chunking';
 import { hexToBytes, type Hex } from 'viem';
 
-export const VERSION = '1.0.4';
+export const VERSION = '1.0.5';
 export const IMAGE_TYPE = 'arkiv-images/v2';
 type Stored<T extends TypeTag> = Column<T, false, false, false>;
 type Indexed<T extends TypeTag> = Column<T, true, false, false>;
@@ -16,6 +16,9 @@ export const ImageSchema: Schema<{
   type: str().indexed(), mode: str().indexed(), mime: str().indexed(), sha256: str().indexed(),
   filename: str(), size: u64(), width: u64(), height: u64(), manifest: key().indexed().optional(), data: binary(),
 });
+/** File admission limit: 7,883,970 blocks, retained for compatibility with files already
+ * written; not the SDK/chain maximum of 7,884,000 or a requirement of Rabdi.
+ * EXPIRATION_INCLUSION_MARGIN_BLOCKS retains its legacy public name only. */
 export { MAX_EXPIRATION_BLOCKS, RABDI_MAX_LIFETIME_BLOCKS, EXPIRATION_INCLUSION_MARGIN_BLOCKS } from 'arkiv-chunking';
 export const INLINE_MAX_BYTES = 120_000;
 export const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
@@ -155,7 +158,7 @@ async function executeStoreImage(options: StoreImageOptions, submitted: (key: He
   const { publicClient, walletClient, filename, expirationBlocks, onProgress } = options;
   filenameValid(filename);
   const info = inspectImage(options.bytes, options.contentType), plan = planImage(info.byteLength);
-  if (!Number.isSafeInteger(expirationBlocks) || expirationBlocks < Math.max(64, plan.transactionCount + 32) || expirationBlocks > MAX_EXPIRATION_BLOCKS) fail('INVALID_INPUT', `Choose a whole-block expiration from max(64, transactionCount + 32) to ${MAX_EXPIRATION_BLOCKS}. Longer storage needs coordinated Lifetime Extension outside this API.`);
+  if (!Number.isSafeInteger(expirationBlocks) || expirationBlocks < Math.max(64, plan.transactionCount + 32) || expirationBlocks > MAX_EXPIRATION_BLOCKS) fail('INVALID_INPUT', `Choose a whole-block expiration from max(64, transactionCount + 32) to ${MAX_EXPIRATION_BLOCKS}. The upper bound is this package's file admission limit, kept for compatibility with files already written; it is not the SDK or chain maximum of 7,884,000 blocks or a requirement of Rabdi. Longer storage needs coordinated Lifetime Extension outside this API.`);
   const bytes = new Uint8Array(options.bytes);
   let manifestKey: Hex | undefined;
   let imageKey: Hex | undefined;
