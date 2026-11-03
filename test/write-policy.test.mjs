@@ -39,9 +39,9 @@ test('estimate failure and half-block overflow stop before any signature', async
   }
 });
 
-test('lifetime above the inclusion margin fails without RPC, accepted maximum is absolute', async () => {
+test('lifetime above the package file admission limit fails without RPC, accepted maximum is absolute', async () => {
   const c = clients();
-  await assert.rejects(storeImage({ ...c, ...input, expirationBlocks: MAX_EXPIRATION_BLOCKS + 1 }), { code: 'INVALID_INPUT' });
+  await assert.rejects(storeImage({ ...c, ...input, expirationBlocks: MAX_EXPIRATION_BLOCKS + 1 }), error => error.code === 'INVALID_INPUT' && /file admission limit.*compatibility with files already written.*not the SDK or chain maximum.*requirement of Rabdi/.test(error.message));
   assert.equal(c.rpc.requests.length, 0);
   await storeImage({ ...c, ...input, expirationBlocks: MAX_EXPIRATION_BLOCKS });
   assert.equal(BigInt(c.rpc.entities[0].expiresAt), 42n + BigInt(MAX_EXPIRATION_BLOCKS));

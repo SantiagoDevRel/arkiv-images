@@ -17,6 +17,8 @@ npm ci
 npm run build
 ```
 
+The date input uses this package's 7,883,970-block file admission limit, kept for compatibility with files already written. It is not the SDK or chain maximum of 7,884,000 blocks and is not a requirement of Rabdi. A shared absolute deadline does not require subtracting 30 blocks; standalone SDK 1.0.1+ maximum lifetimes use `ExpirationTime.max()` without subtraction.
+
 The sample pins `arkiv-images` to exact registry version `1.0.4`; its lock verifies the published archive integrity. Its direct chunking dependency is pinned to registry version 1.1.3. No local tarball is used or uploaded.
 
 ## Deploy to the existing project
