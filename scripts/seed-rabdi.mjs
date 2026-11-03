@@ -1,98 +1,91 @@
-// Idempotent synthetic sample seed. Never retries an ambiguous write.
+﻿// Idempotent current synthetic PNG/JPEG examples; dated large-fixture evidence is historical.
 import assert from 'node:assert/strict';
-import { readFile, writeFile, open, unlink } from 'node:fs/promises';
-import { createPublicClient, createWalletClient, MissingAccessKeyError } from '@arkiv-network/sdk';
-import { rabdi } from '@arkiv-network/sdk/chains';
-import { eq } from '@arkiv-network/sdk/query';
-import { str } from '@arkiv-network/sdk/schema';
-import { http } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
-import { hashFile } from 'arkiv-chunking';
-import { VERSION, ImageSchema, storeImage, retrieveImage, ImageStorageError, ChunkingError, MAX_EXPIRATION_BLOCKS } from '../dist/index.js';
-import { png } from '../test/fixtures.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import {createPublicClient,createWalletClient,ExpirationTime,MAX_LIFETIME} from '@arkiv-network/sdk';
+import {rabdi} from '@arkiv-network/sdk/chains';
+import {eq} from '@arkiv-network/sdk/query';
+import {str} from '@arkiv-network/sdk/schema';
+import {http} from 'viem';
+import {privateKeyToAccount} from 'viem/accounts';
+import {hashFile,writeWithPolicy} from 'arkiv-chunking';
+import {VERSION,ImageSchema,storeImage,retrieveImage} from 'arkiv-images';
+import {png} from '../test/fixtures.mjs';
 
-let queries = 0;
-const statePath = process.env.ARKIV_SEED_STATE ?? new URL('../.seed-rabdi-state.json', import.meta.url);
-async function readState() {
-  try { return JSON.parse(await readFile(statePath, 'utf8')); }
-  catch (error) { if (error.code === 'ENOENT') return { cases: {} }; throw error; }
-}
-async function main() {
-  const accessKey = process.env.ARKIV_ACCESS_KEY_A ?? process.env.ARKIV_ACCESS_KEY;
-  if (!accessKey) throw new MissingAccessKeyError('Rabdi');
-  const chain = rabdi({ accessKey });
-  if (!process.env.TEST_IMAGES_PRIVATE_KEY) throw Error('Configure the lane test wallet locally, outside the checkout.');
-  const account = privateKeyToAccount(process.env.TEST_IMAGES_PRIVATE_KEY);
-  assert.equal(account.address.toLowerCase(), process.env.TEST_IMAGES_ADDRESS?.toLowerCase(), 'Lane wallet address mismatch.');
-  const transport = () => config => {
-    const resolved = http(chain.rpcUrls.default.http[0], { retryCount: 0, timeout: 30000, fetchOptions: { cache: 'no-store' } })(config);
-    return { ...resolved, request: args => { if (args.method === 'arkiv_query') queries++; return resolved.request(args); } };
-  };
-  const publicClient = createPublicClient({ chain, transport: transport() });
-  const walletClient = createWalletClient({ chain, account, transport: transport() });
-  assert.equal(await publicClient.getChainId(), 7794095);
-  const jpeg = new Uint8Array(await readFile(new URL('../test/fixtures/public.jpg', import.meta.url)));
-  const comment = Buffer.alloc(63512, 120); comment[0] = 255; comment[1] = 254; comment.writeUInt16BE(63510, 2);
-  const largeJpeg = new Uint8Array(Buffer.concat([jpeg.subarray(0,2), comment, comment, jpeg.subarray(2)]));
-  const inputs = [
-    ['rabdi-public-inline.png', png(120000, 320, 200)], ['rabdi-public-chunked.png', png(120001, 320, 200)],
-    ['rabdi-public-inline.jpg', jpeg], ['rabdi-public-chunked.jpg', largeJpeg],
-  ];
-  const state = await readState(), cases = [];
-  for (const [filename, bytes] of inputs) {
-    const sha256 = await hashFile(bytes);
-    const found = await publicClient.select({ $key: true }).from(ImageSchema).where(eq('sha256', str(sha256))).ownedBy(account.address).createdBy(account.address).limit(10).fetch();
-    let saved;
-    for (const row of found.entities) {
-      const verified = await retrieveImage({ publicClient, imageKey: row.$key, expectedSha256: sha256 });
-      assert.deepEqual(verified.bytes, bytes);
-      if (verified.filename === filename) { saved = { imageKey: row.$key, sha256, transactionHashes: state.cases[filename]?.transactionHashes ?? [] }; break; }
-    }
-    if (!saved) {
-      const previous = state.cases[filename];
-      if (previous?.inFlight) {
-        // This library's INVALID_INPUT with no hashes/keys is raised before any SDK send.
-        // Preserve that rejected preflight; never clear an uncertain or partially written upload.
-        if (previous.code !== 'INVALID_INPUT' || previous.transactionHashes?.length || previous.imageKey || previous.manifestKey) throw Error('A previous seed write is unresolved. Inspect its preserved receipts; do not resend automatically.');
-        (state.rejectedPreflights ??= []).push({ filename, ...previous });
-      }
-      const expirationBlocks = bytes.length <= 3000 ? MAX_EXPIRATION_BLOCKS : 3600;
-      state.cases[filename] = { inFlight: true, sha256, expirationBlocks }; await writeFile(statePath, JSON.stringify(state, null, 2) + '\n');
-      try {
-        saved = await storeImage({ publicClient, walletClient, bytes, filename, expirationBlocks });
-      } catch (error) {
-        if (error instanceof ImageStorageError || error instanceof ChunkingError) {
-          state.cases[filename] = { ...state.cases[filename], imageKey: error.imageKey, manifestKey: error.manifestKey, transactionHashes: error.transactionHashes, code: error.code };
-          await writeFile(statePath, JSON.stringify(state, null, 2) + '\n');
-        }
-        throw error;
-      }
-    }
-    state.cases[filename] = { ...saved, inFlight: false }; await writeFile(statePath, JSON.stringify(state, null, 2) + '\n');
-    const verified = await retrieveImage({ publicClient, imageKey: saved.imageKey, expectedSha256: sha256 });
-    assert.deepEqual(verified.bytes, bytes);
-    const transactions = [];
-    for (const hash of saved.transactionHashes) {
-      const receipt = await publicClient.getTransactionReceipt({ hash }); const tx = await publicClient.getTransaction({ hash });
-      assert.equal(receipt.status, 'success'); assert.ok(tx.gas >= receipt.gasUsed * 2n); assert.ok(tx.gas <= 15000000n);
-      transactions.push({ hash, status: receipt.status, gasUsed: String(receipt.gasUsed), gasLimit: String(tx.gas), gasPrice: String(receipt.effectiveGasPrice), blockNumber: String(receipt.blockNumber) });
-    }
-    cases.push({ filename, imageKey: saved.imageKey, manifestKey: saved.manifestKey, sha256, mode: verified.mode, format: verified.contentType, bytes: bytes.length, width: verified.width, height: verified.height, expiresAt: String(verified.expiresAt), byteExact: true, transactions });
-    console.log(JSON.stringify({ filename, imageKey: saved.imageKey, mode: verified.mode, bytes: bytes.length, byteExact: true }));
+const statePath=path.resolve(process.env.ARKIV_SEED_STATE??'.seed-rabdi-state.json');
+const descriptorPath=path.resolve(process.env.ARKIV_SEED_DESCRIPTOR??'sample/public/samples.json');
+const lockPath=statePath+'.lock';
+fs.mkdirSync(path.dirname(statePath),{recursive:true});
+const lock=fs.openSync(lockPath,'wx',0o600);
+let queries=0,writes=0;
+const report={package:VERSION,sdk:'1.0.1',chainId:7794095,writes:0,creates:0,extensions:0,transactions:[],cases:[]};
+let state;
+const save=()=>fs.writeFileSync(statePath,JSON.stringify(state,null,2)+'\n',{mode:0o600});
+try{
+ assert.equal(JSON.parse(fs.readFileSync('node_modules/@arkiv-network/sdk/package.json')).version,'1.0.1');
+ state=fs.existsSync(statePath)?JSON.parse(fs.readFileSync(statePath,'utf8')):{cases:{},operations:[]};
+ state.operations??=[];
+ assert.ok(!Object.values(state.cases).some(c=>c.inFlight),'Unresolved seed: inspect persistent receipts before another write.');
+ const account=privateKeyToAccount(process.env.TEST_IMAGES_PRIVATE_KEY);
+ assert.equal(account.address.toLowerCase(),process.env.TEST_IMAGES_ADDRESS.toLowerCase());
+ assert.notEqual(account.address.toLowerCase(),'0x2f6e6adb6bc8f79799cb479fb5cb237fa3caa690');
+ report.account=account.address;
+ const chain=rabdi({accessKey:process.env.ARKIV_ACCESS_KEY_A});
+ const transport=config=>{const base=http(undefined,{retryCount:0,timeout:30000,fetchOptions:{cache:'no-store'}})(config);return{...base,request:args=>{if(args.method==='arkiv_query')queries++;return base.request(args);}};};
+ const reader=createPublicClient({chain,transport,cacheTime:0});
+ const signer=createWalletClient({chain,account,transport,cacheTime:0});
+ assert.equal(await reader.getChainId(),7794095);
+ const timing=await reader.transport.request({method:'arkiv_getBlockTiming',params:[]});
+ assert.ok(Number.isSafeInteger(timing.current_block)&&Number.isSafeInteger(timing.current_block_time)&&Number.isSafeInteger(timing.duration)&&timing.duration>0);
+ const required=BigInt(timing.current_block)+BigInt(Math.max(0,Math.ceil((Date.parse('2027-01-01T00:00:00Z')/1000-timing.current_block_time)/timing.duration)));
+ report.requiredExpiryBlock=String(required);
+ let current;
+ async function recorded(method,args){
+  const params=args.at(-1);assert.ok(params.gas>=1000000n&&params.gasPrice>0n&&Number.isSafeInteger(params.nonce));
+  const operation={filename:current,method,phase:'sending',gas:String(params.gas),gasPrice:String(params.gasPrice),nonce:params.nonce};
+  state.operations.push(operation);save();writes++;
+  try{const result=await signer[method](...args);operation.phase='submitted';operation.hash=result.txHash;save();return result;}
+  catch(error){operation.phase='uncertain';if(/^0x[\da-f]{64}$/i.test(error.txHash??''))operation.hash=error.txHash;save();throw error;}
+ }
+ const wallet={...signer,createEntity:(...a)=>recorded('createEntity',a),patchEntity:(...a)=>recorded('patchEntity',a)};
+ async function policy(context){
+  const balance=await reader.getBalance({address:account.address,blockTag:'latest'});assert.ok(balance>=context.defaults.gas*context.defaults.gasPrice);
+  state.cases[current].lastEstimate={estimate:String(context.estimate),gas:String(context.defaults.gas),gasPrice:String(context.defaults.gasPrice),nonce:context.defaults.nonce};save();return{};
+ }
+ const inputs=[['rabdi-public-inline.jpg',new Uint8Array(fs.readFileSync(new URL('../test/fixtures/public.jpg',import.meta.url)))],['rabdi-public-inline.png',png(undefined,320,200)]];
+ for(const [filename,bytes]of inputs){
+  current=filename;const sha256=await hashFile(bytes);
+  const found=await reader.select({$key:true}).from(ImageSchema).where(eq('sha256',str(sha256))).ownedBy(account.address).createdBy(account.address).limit(10).fetch();
+  let imageKey,verified;
+  for(const row of found.entities){const candidate=await retrieveImage({publicClient:reader,imageKey:row.$key,expectedSha256:sha256});assert.deepEqual(candidate.bytes,bytes);if(candidate.filename===filename){imageKey=row.$key;verified=candidate;break;}}
+  if(!imageKey){
+   state.cases[filename]={inFlight:true,phase:'creating',sha256};save();
+   const created=await storeImage({publicClient:reader,walletClient:wallet,bytes,filename,expirationBlocks:604800,txParams:policy});
+   imageKey=created.imageKey;state.cases[filename].imageKey=imageKey;save();report.creates++;
+   verified=await retrieveImage({publicClient:reader,imageKey,expectedSha256:sha256});
+  }else{state.cases[filename]={...state.cases[filename],imageKey,sha256,inFlight:false};save();}
+  assert.equal(verified.mode,'inline');assert.deepEqual(verified.bytes,bytes);
+  const entity=await reader.getEntity(imageKey);assert.equal(entity.$owner.toLowerCase(),account.address.toLowerCase());assert.equal(entity.$creator.toLowerCase(),account.address.toLowerCase());
+  if(verified.expiresAt<required){
+   state.cases[filename].inFlight=true;state.cases[filename].phase='maximum-extension';save();
+   const extensions=[{entityKey:imageKey,expiration:ExpirationTime.max()}],hashes=[];
+   const renewed=await writeWithPolicy(wallet,{phase:'finalize'},unsigned=>unsigned.executeBatch({extensions},{gas:1000000n,gasPrice:1n,nonce:0}),params=>recorded('executeBatch',[{extensions},params]),hashes,policy);
+   const receipt=await reader.getTransactionReceipt({hash:renewed.txHash});assert.equal(receipt.status,'success');
+   assert.equal((await reader.getEntity(imageKey)).$expiresAt,receipt.blockNumber+MAX_LIFETIME);report.extensions++;
+   verified=await retrieveImage({publicClient:reader,imageKey,expectedSha256:sha256});
   }
-  const report = { network: 'Rabdi', chainId: 7794095, sdk: JSON.parse(await readFile('node_modules/@arkiv-network/sdk/package.json','utf8')).version, package: `arkiv-images@${VERSION}`, verifiedAt: new Date().toISOString(), queriesKeyA: queries, cases };
-  await writeFile(new URL('../docs/rabdi-evidence.json', import.meta.url), JSON.stringify(report, null, 2) + '\n');
-  await writeFile(new URL('../sample/public/samples.json', import.meta.url), JSON.stringify({ chainId: 7794095, cases }, null, 2) + '\n');
-  console.log(JSON.stringify({ queriesKeyA: queries, signedWithFunder: false }));
-}
-try {
-  const lockPath = typeof statePath === 'string' ? statePath + '.lock' : new URL(statePath.href + '.lock');
-  const lock = await open(lockPath, 'wx', 0o600);
-  try { await main(); }
-  finally { await lock.close(); await unlink(lockPath); }
-}
-catch (error) {
-  console.error(error instanceof MissingAccessKeyError ? 'Configure ARKIV_ACCESS_KEY from https://hub.arkiv.network/access-keys.' : 'Seed stopped. Preserve .seed-rabdi-state.json and inspect confirmed or unresolved writes before running it again.');
-  console.error(JSON.stringify({ code: error instanceof ImageStorageError || error instanceof ChunkingError ? error.code : 'SEED_FAILED', queriesKeyA: queries }));
-  process.exitCode = 1;
-}
+  assert.ok(verified.expiresAt>=required);assert.deepEqual(verified.bytes,bytes);
+  state.cases[filename]={...state.cases[filename],inFlight:false,phase:'complete',expiresAt:String(verified.expiresAt)};save();
+  report.cases.push({filename,imageKey,sha256,mode:verified.mode,format:verified.contentType,bytes:bytes.length,width:verified.width,height:verified.height,expiresAt:String(verified.expiresAt),byteExact:true});
+ }
+ for(const operation of state.operations){
+  if(!operation.hash)throw Error('Operation hash missing; preserve state and reconcile.');
+  const [receipt,tx]=await Promise.all([reader.getTransactionReceipt({hash:operation.hash}),reader.getTransaction({hash:operation.hash})]);
+  assert.equal(receipt.status,'success');assert.equal(tx.from.toLowerCase(),account.address.toLowerCase());assert.equal(String(tx.gas),operation.gas);assert.equal(String(tx.gasPrice),operation.gasPrice);assert.equal(tx.nonce,operation.nonce);
+  assert.ok(tx.gas<=15000000n);operation.phase='confirmed';save();report.transactions.push({...operation,status:receipt.status,gasUsed:String(receipt.gasUsed),blockNumber:String(receipt.blockNumber)});
+ }
+ fs.writeFileSync(descriptorPath,JSON.stringify({chainId:7794095,cases:report.cases},null,2)+'\n');
+ report.writes=writes;report.queriesKeyA=queries;report.funderSigned=false;
+ console.log(JSON.stringify(report,null,2));
+}catch(error){console.error(JSON.stringify({stopped:true,error:error.code??error.name,writes,queriesKeyA:queries,unresolvedStatePreserved:true}));process.exitCode=1;}
+finally{fs.closeSync(lock);fs.unlinkSync(lockPath);}

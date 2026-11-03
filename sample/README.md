@@ -1,6 +1,6 @@
 # Image sample — Rabdi
 
-This sample uses the registry release **arkiv-images 1.0.4** and keeps the image picker, local-date Entity Expiration, byte verification, download, entity inspector, dark/light themes and wallet selection. All copy is English. It targets the existing **arkiv-images-example** Vercel project at https://arkiv-images-example.vercel.app.
+This sample uses the registry release **arkiv-images 1.0.5** and keeps the image picker, local-date Entity Expiration, byte verification, download, entity inspector, dark/light themes and wallet selection. All copy is English. It targets the existing **arkiv-images-example** Vercel project at https://arkiv-images-example.vercel.app.
 
 The UI uses the package public API. Reads go through its own bounded `/api/rpc` function with server-only `ARKIV_ACCESS_KEY`. Only chain ID, current block number, block timing and bounded image/chunk queries are accepted; no signer, access key, upstream URL or raw provider error is sent to the browser. Root and manifest reads are latest state; chunks use keyset pages. Set a free [Hub access key](https://hub.arkiv.network/access-keys) in the Vercel preview environment.
 
@@ -19,7 +19,7 @@ npm run build
 
 The date input uses this package's 7,883,970-block file admission limit, kept for compatibility with files already written. It is not the SDK or chain maximum of 7,884,000 blocks and is not a requirement of Rabdi. A shared absolute deadline does not require subtracting 30 blocks; standalone SDK 1.0.1+ maximum lifetimes use `ExpirationTime.max()` without subtraction.
 
-The sample pins `arkiv-images` to exact registry version `1.0.4`; its lock verifies the published archive integrity. Its direct chunking dependency is pinned to registry version 1.1.4. Published `arkiv-images@1.0.4` also installs its own nested `arkiv-chunking@1.1.3`; the root library version 1.0.5 uses chunking 1.1.4. No local tarball is used or uploaded.
+The sample pins `arkiv-images` to exact registry version `1.0.5`; its lock verifies the published archive integrity. Its direct chunking dependency is pinned to registry version 1.1.4. The library and sample share exact chunking 1.1.4, without a nested older chunking copy. No local tarball is used or uploaded.
 
 ## Deploy to the existing project
 
@@ -32,11 +32,11 @@ vercel deploy --cwd sample --prod --scope santiago-hobby
 
 Vercel builds remotely from the uploaded sample source. Its `vercel.json` selects Vite, runs `npm ci` and `npm run build`, and serves `dist/` together with the Node function `api/rpc.mjs`. This route does not use `--prebuilt` or upload a local `.vercel/output`. The anchored `.vercelignore` allowlist includes the manifest, genuine lock, TypeScript config, HTML, Vercel config, `src/**`, `public/**` and `api/**`; it excludes local environment files and dependency/build directories.
 
-Configure `ARKIV_ACCESS_KEY` only in this existing project's server environment, using the sample read key. It is read by `api/rpc.mjs`; Vite receives no access key. Versioned [package documentation](https://github.com/SantiagoDevRel/arkiv-images/tree/v1.0.4#readme) and the [package agent guide](https://github.com/SantiagoDevRel/arkiv-images/blob/v1.0.4/AGENTS.md) match the installed release. `node scripts/sample-release-guard.mjs` from the repository root checks versioned sample links and the remote-build upload contract; `npm test` executes its negative mutations.
+Configure `ARKIV_ACCESS_KEY` only in this existing project's server environment, using the sample read key. It is read by `api/rpc.mjs`; Vite receives no access key. Versioned [package documentation](https://github.com/SantiagoDevRel/arkiv-images/tree/v1.0.5#readme) and the [package agent guide](https://github.com/SantiagoDevRel/arkiv-images/blob/v1.0.5/AGENTS.md) match the installed release. `node scripts/sample-release-guard.mjs` from the repository root checks versioned sample links and the remote-build upload contract; `npm test` executes its negative mutations.
 
 The Vite development server alone does not serve Vercel functions. Use a Vercel preview for the complete real-network read flow; controlled browser tests route `/api/rpc` to the in-memory harness. Never put an access key in Vite environment variables.
 
-Seed non-sensitive PNG/JPEG examples with `node scripts/seed-rabdi.mjs` from the package root after configuring local test credentials. Keep `.seed-rabdi-state.json` between runs; unresolved writes block further seed writes. Successful seeding writes `sample/public/samples.json` and `docs/rabdi-evidence.json`; the Retrieve tab offers a public sample only when that manifest exists. A Rabdi reset requires rerunning the command, not hardcoded assumptions that old entity keys still exist.
+Seed non-sensitive PNG/JPEG examples with `node scripts/seed-rabdi.mjs` from the package root after configuring local test credentials. Keep `.seed-rabdi-state.json` between runs; unresolved writes block further seed writes. Successful seeding verifies small synthetic PNG/JPEG examples, reuses suitable live entities and uses coordinated `ExpirationTime.max()` extension when required. The expired large examples remain in dated evidence; they are not recreated as long-lived examples to keep these maximum-lifetime examples within the unchanged half-block gas budget. Seeding writes the current `sample/public/samples.json`; dated `docs/rabdi-evidence.json` stays historical. the Retrieve tab offers a public sample only when that manifest exists. A Rabdi reset requires rerunning the command, not hardcoded assumptions that old entity keys still exist.
 
 The sample fully decodes images before writes and after retrieval, displays only allowed raster MIME, treats filenames as text and revokes Blob URLs. All original image bytes and metadata, including EXIF/GPS, remain public. Use synthetic images. The entity inspector performs separate latest-state read checks and can fail without hiding an already verified image.
 

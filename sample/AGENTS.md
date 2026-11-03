@@ -4,7 +4,7 @@ Edit instructions only in AGENTS.md; CLAUDE.md only imports this file.
 
 Read README.md here and the package README/AGENTS.md before changing the sample. Preserve its existing visual design and English Arkiv copy.
 
-- Run `npm ci` in sample; it pins the registry release arkiv-images 1.0.4, SDK `^1.0.0`, verified with 1.0.1 and direct chunking 1.1.4. The published image version retains its own nested chunking 1.1.3; the root image library 1.0.5 uses chunking 1.1.4. Never import sibling source or duplicate package storage, chunking or transaction policy.
+- Run `npm ci` in sample; it pins the registry release arkiv-images 1.0.5, SDK `^1.0.0`, verified with 1.0.1 and direct chunking 1.1.4. The library and sample share chunking 1.1.4 without a nested older copy. Never import sibling source or duplicate package storage, chunking or transaction policy.
 - Retrieval is read-only through /api/rpc. Set ARKIV_ACCESS_KEY server-side only; no browser access key, arbitrary RPC destination, signing method, batch request, historical-state query or raw provider error may pass the proxy.
 - Browser writes use MetaMask/Rabby and the visitor's account/Rabdi RPC. Ask the visitor to configure their own key in their wallet if Rabdi is missing. Never request a private key or add a server signer. Guard account/network before each signature; never switch halfway through a write.
 - Keep the selected file's createImageWriteOperation across clicks/re-renders, including failed or uncertain results. Setup runs after its sending guard is stored. Only an explicit new file choice creates another upload operation. Preserve submitted hashes before receipt rechecks; only an authoritative gas-exhausted revert permits the shared policy's one bounded retry.

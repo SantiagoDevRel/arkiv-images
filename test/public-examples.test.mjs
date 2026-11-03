@@ -7,10 +7,12 @@ const text=fs.readFileSync(new URL('../sample/src/public-examples.ts',import.met
 const {outputText}=ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}});
 const {activeExamples}=await import('data:text/javascript;base64,'+Buffer.from(outputText).toString('base64'));
 const cases=JSON.parse(fs.readFileSync(new URL('../sample/public/samples.json',import.meta.url))).cases;
-test('public default is the long-lived JPEG; old PNGs and expiry boundary are excluded',()=>{
+test('public default stays the long-lived JPEG and each example has an exclusive expiry boundary',()=>{
  assert.equal(cases[0].imageKey,'0x2989bda8bbadfe7e22a0b1e3a435aa3b266106adbbca3f97c162ee4eccca8488');
  const active=activeExamples(cases,20000n);assert.equal(active[0].imageKey,cases[0].imageKey);assert.ok(active.every(x=>BigInt(x.expiresAt)>20000n));
- assert.deepEqual(activeExamples(cases,BigInt(cases[0].expiresAt)),[]);
+ for(const item of cases)assert.ok(!activeExamples(cases,BigInt(item.expiresAt)).some(x=>x.imageKey===item.imageKey));
+ const lastExpiry=cases.reduce((maximum,item)=>BigInt(item.expiresAt)>maximum?BigInt(item.expiresAt):maximum,0n);assert.deepEqual(activeExamples(cases,lastExpiry),[]);
+ assert.deepEqual(activeExamples([{...cases[0],expiresAt:'19707'}],20000n),[]);
  assert.deepEqual(activeExamples([{imageKey:'bad',expiresAt:'no'}],0n),[]);
 });
 test('head read allows no arguments only and rejects historical reads and writes',()=>{
