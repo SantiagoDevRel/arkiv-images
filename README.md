@@ -6,7 +6,7 @@ Store a public PNG or JPEG as queryable Arkiv entities, then retrieve its origin
 
 ## Install and inspect
 
-ESM, Node 22.10+ with Web Crypto, or a browser on HTTPS/localhost. Dependencies: SDK `^1.0.0`, verified with 1.0.1, viem 2.56.3, arkiv-chunking 1.1.3.
+ESM, Node 22.10+ with Web Crypto, or a browser on HTTPS/localhost. Dependencies: SDK `^1.0.0`, verified with 1.0.1, viem 2.56.3, arkiv-chunking 1.1.4.
 
 ```sh
 mkdir image-consumer

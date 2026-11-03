@@ -1,7 +1,7 @@
 [
   {
     "file": "CHANGELOG.md",
-    "sha256": "e9b91a74d8fef44973a2c27fe1d269eb69fb7110903379180ffa79024c22198d",
+    "sha256": "96f4eef6dbf68f29667c309d115e1b65d6f39a9f828a466ca39eb6e1ebb49f2d",
     "reason": "Immutable release history or a clearly marked historical section.",
     "lines": [
       "- Breaking: SDK 1\u002e0\u002e0 peer requirement and Rabdi testnet, chain ID 7794095."
