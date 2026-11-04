@@ -101,7 +101,7 @@ function message(error: unknown): string {
   }
   const code = (error as { code?: number })?.code;
   if (code === 4001) return 'You rejected the wallet request. This operation was not confirmed.';
-  const known: Record<string,string> = { NO_WALLET: 'Install or enable MetaMask or Rabby, then reload this page.', ADD_NETWORK: 'Configure Rabdi (7794095) in your wallet with your own access key from hub.arkiv.network/access-keys, then reconnect.', CONNECT_FIRST: 'Connect a wallet before storing an image.', WRONG_CHAIN: 'Your wallet changed networks. Reconnect before storing.', WALLET_CHANGED: 'The account or network changed. Inspect confirmed transactions before trying again.', DECODE_FAILED: 'The browser could not decode the image. Choose a valid PNG/JPEG.', BYTES_DIFFER: 'The recovered image does not match the original file byte for byte.' };
+  const known: Record<string,string> = { NO_WALLET: 'Install or enable MetaMask or Rabby, then reload this page.', CONNECT_FIRST: 'Connect a wallet before storing an image.', WRONG_CHAIN: 'Your wallet changed networks. Reconnect before storing.', WALLET_CHANGED: 'The account or network changed. Inspect confirmed transactions before trying again.', DECODE_FAILED: 'The browser could not decode the image. Choose a valid PNG/JPEG.', BYTES_DIFFER: 'The recovered image does not match the original file byte for byte.' };
   return known[(error as Error)?.message] ?? 'The operation did not complete. Check your connection, testnet funds and pending wallet requests.';
 }
 

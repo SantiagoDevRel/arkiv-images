@@ -2,20 +2,35 @@ import { createWalletClient } from '@arkiv-network/sdk';
 import { rabdi } from '@arkiv-network/sdk/chains';
 import { custom, type EIP1193Provider, type Hex } from 'viem';
 
-const chain = rabdi({ accessKey: '' });
-/** Uses the visitor's configured wallet RPC, never a server key. */
+/**
+ * The only RPC URL this sample offers to a wallet: Rabdi's keyless public endpoint.
+ * Access keys stay server-side (`/api/rpc`); they never go into a wallet, the bundle, a URL or a QR.
+ */
+export const RABDI_PUBLIC_RPC = 'https://rpc.rabdi.db-chain.testnet.arkiv.network';
+export const RABDI_EXPLORER = 'https://rabdi.explorer.arkiv.network';
+// Chain metadata only: reads use /api/rpc and every wallet request goes through the injected provider.
+const chain = { ...rabdi({ accessKey: '' }), rpcUrls: { default: { http: [RABDI_PUBLIC_RPC] } } };
+const chainId = `0x${chain.id.toString(16)}`;
+
+/** Parameters for `wallet_addEthereumChain`: Rabdi with only the keyless public RPC. */
+export function rabdiAddChainParams() {
+  return { chainId, chainName: 'Rabdi', nativeCurrency: { name: 'Golem', symbol: 'tGLM', decimals: 18 }, rpcUrls: [RABDI_PUBLIC_RPC], blockExplorerUrls: [RABDI_EXPLORER] };
+}
+
+/** Switches the wallet to Rabdi on a user action; a wallet without Rabdi (4902) is offered only the keyless RPC. */
 export async function connectWallet(provider: EIP1193Provider): Promise<Hex> {
   const addresses = await provider.request({ method: 'eth_requestAccounts' });
   const address = addresses[0];
   if (!address) throw new Error('CONNECT_FIRST');
   if (Number(await provider.request({ method: 'eth_chainId' })) !== chain.id) {
-    const chainId = `0x${chain.id.toString(16)}`;
     try { await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] }); }
     catch (error) {
       if ((error as { code?: number }).code !== 4902) throw error;
-      throw new Error('ADD_NETWORK');
+      await provider.request({ method: 'wallet_addEthereumChain', params: [rabdiAddChainParams()] });
+      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
     }
   }
+  // Confirms 0x76edaf and the same account before the connection counts; every send rechecks both.
   await guardWallet(provider, address);
   return address;
 }

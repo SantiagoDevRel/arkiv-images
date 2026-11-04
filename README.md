@@ -2,7 +2,7 @@
 
 Store a public PNG or JPEG as queryable Arkiv entities, then retrieve its original bytes with size, MIME, dimensions and SHA-256 checks. Small images use one entity with a non-indexed `bytes()` column. Larger images use `arkiv-chunking`: an image entity references a file manifest and ordered immutable chunks.
 
-**arkiv-images 1.0.5 targets Rabdi testnet.** It stores PNG/JPEG binary data in `bytes` columns. See [verification](docs/verification.md) for reproducible checks and separately labelled historical observations.
+**arkiv-images 1.0.6 targets Rabdi testnet.** It stores PNG/JPEG binary data in `bytes` columns. See [verification](docs/verification.md) for reproducible checks and separately labelled historical observations.
 
 ## Install and inspect
 
@@ -13,7 +13,7 @@ mkdir image-consumer
 cd image-consumer
 npm init -y
 npm pkg set type=module
-npm install arkiv-images@1.0.5 @arkiv-network/sdk@1.0.1 viem@2.56.3
+npm install arkiv-images@1.0.6 @arkiv-network/sdk@1.0.1 viem@2.56.3
 ```
 
 Save `inspect.mjs`:
@@ -76,7 +76,7 @@ Run `node roundtrip.mjs` after configuring those environment variables locally. 
 | `ImageSchema`, `IMAGE_TYPE` | SDK 1.0 named schema `arkiv-images/v2`. Binary `data` is stored without an index. Indexed type/mode/mime/sha256/manifest support discovery. Filename, size and dimensions are stored typed columns. |
 | `ImageStorageError`, `ChunkingError` | Safe code/message; preserve imageKey/manifestKey and transactionHashes on failure. Raw causes can include provider details: never display or log them. |
 | `TransactionParameterPolicy`, `Progress` | Public TypeScript integration types re-exported from chunking. |
-| `VERSION`, `INLINE_MAX_BYTES`, `MAX_IMAGE_BYTES`, `MAX_IMAGE_PIXELS`, `MAX_EXPIRATION_BLOCKS`, `RABDI_MAX_LIFETIME_BLOCKS`, `EXPIRATION_INCLUSION_MARGIN_BLOCKS` | Implementation version (`1.0.5`) and enforced limits. MAX_EXPIRATION_BLOCKS is the package file admission limit; EXPIRATION_INCLUSION_MARGIN_BLOCKS is a legacy public name for the 30-block difference, not a Rabdi requirement. |
+| `VERSION`, `INLINE_MAX_BYTES`, `MAX_IMAGE_BYTES`, `MAX_IMAGE_PIXELS`, `MAX_EXPIRATION_BLOCKS`, `RABDI_MAX_LIFETIME_BLOCKS`, `EXPIRATION_INCLUSION_MARGIN_BLOCKS` | Implementation version (`1.0.5`; release 1.0.6 changed documentation only) and enforced limits. MAX_EXPIRATION_BLOCKS is the package file admission limit; EXPIRATION_INCLUSION_MARGIN_BLOCKS is a legacy public name for the 30-block difference, not a Rabdi requirement. |
 
 Import types such as `ImageInfo`, `ImagePlan`, `StoreImageOptions`, `StoredImage`, `RetrieveImageOptions`, `RetrievedImage`, `ImageContentType` and `ImageErrorCode` directly from `arkiv-images`.
 
@@ -111,7 +111,7 @@ The package checks containers, not full PNG CRC/JPEG entropy decoding or malware
 
 ## Sample and development
 
-The [sample README](sample/README.md) explains the existing `arkiv-images-example` project and visitor-wallet setup. Reads use its own bounded `/api/rpc` endpoint and a server-side `ARKIV_ACCESS_KEY`; the visitor configures their own wallet RPC. No server signer. The sample pins the released registry package `arkiv-images@1.0.5`, independently of the library version above.
+The [sample README](sample/README.md) explains the existing `arkiv-images-example` project and visitor-wallet setup. Reads use its own bounded `/api/rpc` endpoint and a server-side `ARKIV_ACCESS_KEY`. Wallets sign through the keyless public RPC `https://rpc.rabdi.db-chain.testnet.arkiv.network`, which the sample adds when a wallet does not know Rabdi. Never put an access key or a keyed RPC URL in a wallet. No server signer. The sample pins the released registry package `arkiv-images@1.0.5`, independently of the library version above.
 
 Give consumer agents [AGENTS.md](AGENTS.md) and [sample/AGENTS.md](sample/AGENTS.md) explicitly. The corresponding CLAUDE.md files only import those guides.
 
