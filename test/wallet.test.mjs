@@ -30,7 +30,7 @@ test('connection is already on Rabdi or automatically switches/adds only Rabdi',
   }
 });
 test('rejected or ineffective switch never produces a connected wallet', async () => {
-  await assert.rejects(connectWallet(wallet({ chain:'0x1', unknown:true })), /ADD_NETWORK/);
+  await assert.rejects(connectWallet(wallet({ chain:'0x1', unknown:true, switchWorks:false })), /WRONG_CHAIN/);
   await assert.rejects(connectWallet(wallet({ chain:'0x1', reject:true })), e => e.code === 4001);
   await assert.rejects(connectWallet(wallet({ chain:'0x1', switchWorks:false })), /WRONG_CHAIN/);
 });

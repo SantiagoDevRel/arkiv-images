@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.6
+
+- Documentation-only release: `dist` is byte-identical to 1.0.5 and the exported implementation `VERSION` remains 1.0.5. `scripts/verify-candidate.mjs` enforces this against the registry archive.
+- Sample: when a wallet does not know Rabdi (4902), it now adds Rabdi with only the keyless public RPC `https://rpc.rabdi.db-chain.testnet.arkiv.network`, switches and confirms chain `0x76edaf` before any send. It no longer tells visitors to configure Rabdi with an access key.
+- README and AGENTS guides: wallets use only the keyless public RPC; access keys stay server-side.
+
 ## 1.0.5
 
 - Verify the SDK `^1.0.0` peer with 1.0.1 and pin development, consumers and the sample SDK to 1.0.1.

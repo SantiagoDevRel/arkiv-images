@@ -6,7 +6,7 @@ The UI uses the package public API. Reads go through its own bounded `/api/rpc` 
 
 The read function rejects a foreign Origin host or cross-site Fetch Metadata before contacting Rabdi. POST requests require `Content-Type: application/json`; JSON clients without Origin remain supported. These checks limit browser cross-origin quota use; they do not authenticate arbitrary HTTP clients.
 
-Writes use the visitor's MetaMask/Rabby account and configured Rabdi RPC, chain 7794095. If Rabdi is missing, configure it in the wallet using your own access key, then connect again. The app switches to an already configured Rabdi network; it never installs a server key in a wallet. Obtain [test funds](https://hub.arkiv.network/faucet). Every actual signature is guarded for account/network changes and uses the package's explicit gas policy.
+Writes use the visitor's MetaMask/Rabby account on Rabdi, chain 7794095. Click **Connect wallet**: the sample switches the wallet to Rabdi and, if the wallet does not have it, asks the wallet to add it with the keyless public RPC `https://rpc.rabdi.db-chain.testnet.arkiv.network` (`src/wallet.ts`). To add Rabdi by hand, use that same URL. Never put an access key or a keyed RPC URL in a wallet: access keys stay server-side. If your wallet already has Rabdi saved with a keyed RPC URL, edit that network to the keyless URL. The sample confirms chain `0x76edaf` and the account before the connection counts. Arkiv reads never go through the wallet. Obtain [test funds](https://hub.arkiv.network/faucet). Every actual signature is guarded for account/network changes and uses the package's explicit gas policy.
 
 ## Build the sample
 
