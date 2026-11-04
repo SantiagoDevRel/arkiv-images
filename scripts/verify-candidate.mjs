@@ -22,13 +22,21 @@ assert.equal(integrity,packed.integrity);assert.equal(createHash('sha1').update(
 const runtimeVersion=/export const VERSION = '(\d+\.\d+\.\d+)';/.exec(await readFile('src/index.ts','utf8'))?.[1];assert.ok(runtimeVersion,'src/index.ts must export a literal VERSION');
 let runtimeSource='this release';
 if(runtimeVersion!==version){
+  const semver=v=>v.split('.').map(Number),newer=(a,b)=>{for(let i=0;i<3;i++)if(a[i]!==b[i])return a[i]>b[i];return false;};
+  assert.ok(newer(semver(version),semver(runtimeVersion)),`runtime VERSION ${runtimeVersion} must be an earlier release than ${version}`);
   const earlier=JSON.parse(run('npm',['pack',`${name}@${runtimeVersion}`,'--ignore-scripts','--json','--pack-destination',staging]))[0];
   assert.equal(earlier.version,runtimeVersion);
-  const unpack=async(file,dir)=>{await mkdir(dir);run('tar',['-xzf',join(staging,file),'-C',dir]);const base=join(dir,'package','dist');const files=(await readdir(base,{recursive:true,withFileTypes:true})).filter(e=>e.isFile()).map(e=>join(e.parentPath??e.path,e.name).slice(base.length+1).replaceAll('\\','/')).sort();return{base,files};};
+  const unpack=async(file,dir)=>{await mkdir(dir);run('tar',['-xzf',join(staging,file),'-C',dir]);const base=join(dir,'package');const files=(await readdir(base,{recursive:true,withFileTypes:true})).filter(e=>e.isFile()).map(e=>join(e.parentPath??e.path,e.name).slice(base.length+1).replaceAll('\\','/')).sort();return{base,files};};
   const current=await unpack(packed.filename,join(staging,'unpacked-current')),previous=await unpack(earlier.filename,join(staging,'unpacked-runtime'));
-  assert.deepEqual(current.files,previous.files,'documentation-only release must ship the same dist files');
-  for(const file of current.files)assert.deepEqual(await readFile(join(current.base,file)),await readFile(join(previous.base,file)),`dist/${file} must be byte-identical to ${name}@${runtimeVersion}`);
-  runtimeSource=`${name}@${runtimeVersion} (${current.files.length} dist files byte-identical)`;
+  // Only guides and release notes may change; everything else, dist included, must be byte-identical.
+  const documentation=new Set(['README.md','AGENTS.md','CHANGELOG.md','docs/verification.md','sample/README.md','sample/AGENTS.md']);
+  assert.deepEqual(current.files,previous.files,'documentation-only release must ship the same files');
+  const manifestWithoutVersion=async base=>{const m=JSON.parse(await readFile(join(base,'package.json'),'utf8'));delete m.version;return m;};
+  assert.deepEqual(await manifestWithoutVersion(current.base),await manifestWithoutVersion(previous.base),'package.json may differ only in version');
+  const identical=current.files.filter(file=>file!=='package.json'&&!documentation.has(file));
+  assert.ok(identical.some(file=>file.startsWith('dist/')),'the archive must contain dist files');
+  for(const file of identical)assert.deepEqual(await readFile(join(current.base,file)),await readFile(join(previous.base,file)),`${file} must be byte-identical to ${name}@${runtimeVersion}`);
+  runtimeSource=`${name}@${runtimeVersion} (${identical.length} non-documentation files byte-identical, ${identical.filter(file=>file.startsWith('dist/')).length} in dist; package.json equal except version)`;
 }
 const consumer=join(staging,'consumer');await mkdir(consumer);
 await writeFile(join(consumer,'package.json'),JSON.stringify({name:'images-release-consumer',private:true,type:'module'}));

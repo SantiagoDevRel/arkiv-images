@@ -25,7 +25,9 @@ export async function connectWallet(provider: EIP1193Provider): Promise<Hex> {
   if (Number(await provider.request({ method: 'eth_chainId' })) !== chain.id) {
     try { await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] }); }
     catch (error) {
-      if ((error as { code?: number }).code !== 4902) throw error;
+      // 4902 = unknown chain; MetaMask Mobile wraps it as -32603 with data.originalError.code 4902.
+      const failure = error as { code?: number; data?: { originalError?: { code?: number } } };
+      if (failure.code !== 4902 && failure.data?.originalError?.code !== 4902) throw error;
       await provider.request({ method: 'wallet_addEthereumChain', params: [rabdiAddChainParams()] });
       await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
     }

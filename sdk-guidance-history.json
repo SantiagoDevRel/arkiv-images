@@ -9,7 +9,7 @@
   },
   {
     "file": "docs/verification.md",
-    "sha256": "8e8eb37c6c728243170398b16aef7bc8891f5c68123a3be78164f90dbf052dee",
+    "sha256": "9df2a0c8050538f9ab6fb974ac43179e083d47646bc4d77f456007a84474d942",
     "reason": "Immutable release history or a clearly marked historical section.",
     "lines": [
       "Release: **arkiv-images 1\u002e0\u002e0**, SDK **1\u002e0\u002e0**, viem **2.56.3**, exact registry **arkiv-chunking 1.1.0**. The separately approved tarball was published without rebuilding: SHA-256 `c4c5417edb32179f7cc2f39b2e959711103925f019a0bd0ba62e84593826c110`, npm shasum `ff85d022ad0d3e074f002fec06a52cb2914b1d34`. Registry installation is checked independently from the earlier candidate installation."
